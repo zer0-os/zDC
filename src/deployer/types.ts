@@ -9,7 +9,7 @@ export interface IHHSubtaskArguments {
 }
 
 export interface IContractFactoryGeneric {
-  deploy : (args : TDeployArgs) => Promise<ContractV6>;
+  deploy : (...args : TDeployArgs) => Promise<ContractV6>;
   attach : (address : string) => ContractV6;
 }
 
