@@ -1,0 +1,31 @@
+{
+  "name": "@zero-tech/zdc",
+  "version": "0.5.0",
+  "description": "Zero Deploy Campaign",
+  "author": "Zero CPT",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zer0-os/zDC.git"
+  },
+  "main": "index.ts",
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  },
+  "scripts": {
+    "test": "test",
+    "lint-ts": "yarn eslint ./src/**"
+  },
+  "pre-commit": [
+    "lint"
+  ],
+  "dependencies": {
+    "@zero-tech/eslint-config-cpt": "0.2.7",
+    "@types/node": "^18.15.11",
+    "typescript": "^5.0.2",
+    "ts-node": "10.9.1",
+    "ethers": "^6.9.0",
+    "eslint": "^8.37.0"
+  }
+}
