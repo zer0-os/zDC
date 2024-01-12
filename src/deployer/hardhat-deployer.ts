@@ -1,26 +1,25 @@
-import * as hre from "hardhat";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
-import { ethers } from "ethers";
+// TODO iso: possibly use Node's native API POST for Tenderly push so we don't need axios
 import axios from "axios";
-import {
-  DefenderRelayProvider,
-  DefenderRelaySigner,
-} from "@openzeppelin/defender-sdk-relay-signer-client/lib/ethers";
 import { ContractV6 } from "../campaign/types";
+import { IHardhatGeneric, ISignerGeneric, IProviderGeneric } from "./types";
 
 
-export class HardhatDeployer {
-  hre : HardhatRuntimeEnvironment;
-  signer : SignerWithAddress | DefenderRelaySigner;
+export class HardhatDeployer <
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> {
+  hre : H;
+  signer : S;
   env : string;
-  provider ?: DefenderRelayProvider;
+  provider ?: P;
 
   constructor (
-    signer : SignerWithAddress | DefenderRelaySigner,
+    hre : H,
+    signer : S,
     env : string,
-    provider ?: DefenderRelayProvider,
+    provider ?: P,
   ) {
     this.hre = hre;
     this.signer = signer;
@@ -28,9 +27,9 @@ export class HardhatDeployer {
     this.provider = provider;
   }
 
-  async getFactory (contractName : string, signer ?: SignerWithAddress | DefenderRelaySigner) {
+  async getFactory (contractName : string, signer ?: S) {
     const attachedSigner = signer ?? this.signer;
-    return this.hre.ethers.getContractFactory(contractName, attachedSigner as ethers.Signer);
+    return this.hre.ethers.getContractFactory(contractName, attachedSigner);
   }
 
   async getContractObject (contractName : string, address : string) {
@@ -79,7 +78,7 @@ export class HardhatDeployer {
     } else {
       const tx = await deployment.deploymentTransaction();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
+      receipt = await this.provider.waitForTransaction(tx.hash, 3);
 
       return contractFactory.attach(receipt.contractAddress);
     }
