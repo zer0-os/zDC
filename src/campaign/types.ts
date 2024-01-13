@@ -4,7 +4,9 @@ import { TDeployMissionCtor } from "../missions/types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IGeneralConfig } from "../types";
+import { IHardhatGeneric, IProviderGeneric, ISignerGeneric } from "../deployer/types";
+import { DeployCampaign } from "./deploy-campaign";
+
 
 export type ContractV6 = BaseContract & Omit<BaseContract, keyof BaseContract>;
 
@@ -30,8 +32,25 @@ export interface ICampaignArgs {
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
   // TODO iso: figure out more general type here
-  config : IGeneralConfig;
+  config : IDeployCampaignConfig;
 }
 
 // TODO iso: figure out more general type here or remove this if works out of the box
 export type TZNSContractState = IContractState;
+
+export interface IDeployCampaignConfig {
+  // TODO iso: figure out more general type here
+  [key : string] : any;
+  env : string;
+  postDeploy : {
+    tenderlyProjectSlug : string;
+    monitorContracts : boolean;
+    verifyContracts : boolean;
+  };
+}
+
+export type IDeployCampaignCtor = new <
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> (args : ICampaignArgs) => DeployCampaign<H, S, P>;

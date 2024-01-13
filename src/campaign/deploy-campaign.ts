@@ -4,40 +4,31 @@ import {
   TLogger,
   IMissionInstances,
   TZNSContractState,
-  ContractV6,
+  ContractV6, IDeployCampaignConfig,
 } from "./types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { ITenderlyContractData, TDeployMissionCtor } from "../missions/types";
 import { BaseDeployMission } from "../missions/base-deploy-mission";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IGeneralConfig } from "../types";
+import { IHardhatGeneric, IProviderGeneric, ISignerGeneric } from "../deployer/types";
+import { makeCampaignProxy } from "./proxy";
 
 
-export class DeployCampaign {
+export class DeployCampaign <
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> {
   state : ICampaignState;
-  deployer : HardhatDeployer;
+  deployer : HardhatDeployer<H, S, P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
   // TODO iso: figure out more general type here
-  config : IGeneralConfig;
+  config : IDeployCampaignConfig;
 
   // TODO dep: improve typing here so that methods of each contract type are resolved in Mission classes!
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [name : string | symbol] : any;
-
-  private static indexedHandler : ProxyHandler<DeployCampaign> = {
-    get: (target, prop) => {
-      if (typeof prop === "string") {
-        if (!!target.state.contracts[prop]) {
-          return target.state.contracts[prop];
-        }
-
-        if (!!target[prop]) {
-          return target[prop];
-        }
-      }
-    },
-  };
 
   constructor ({
     missions,
@@ -56,7 +47,7 @@ export class DeployCampaign {
     this.logger = logger;
     this.config = config;
 
-    const campaignProxy = new Proxy(this, DeployCampaign.indexedHandler);
+    const campaignProxy = makeCampaignProxy(this);
 
     // instantiate all missions
     this.state.instances = missions.reduce(
