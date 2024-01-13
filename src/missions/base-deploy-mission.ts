@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
-import { Contract } from "ethers";
 import {
   TDeployArgs,
   IProxyData,
-  IDeployMissionArgs, ITenderlyContractData,
+  IDeployMissionArgs,
+  ITenderlyContractData,
 } from "./types";
 import { DeployCampaign } from "../campaign/deploy-campaign";
 import { ContractV6, IDeployCampaignConfig, TLogger } from "../campaign/types";
@@ -57,7 +57,7 @@ export class BaseDeployMission {
       const contract = await this.campaign.deployer.getContractObject(
         this.contractName,
         dbContract.address,
-      ) as Contract;
+      ) as ContractV6;
 
       // eslint-disable-next-line max-len
       this.logger.debug(`Updating ${this.contractName} in state from DB data with address ${await contract.getAddress()}`);
