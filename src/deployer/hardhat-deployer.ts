@@ -1,7 +1,7 @@
 import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
 // TODO iso: possibly use Node's native API POST for Tenderly push so we don't need axios
 import axios from "axios";
-import { ContractV6 } from "../campaign/types";
+import { IContractV6 } from "../campaign/types";
 import { IHardhatGeneric, ISignerGeneric, IProviderGeneric } from "./types";
 
 
@@ -46,7 +46,7 @@ export class HardhatDeployer <
     contractName : string;
     args : TDeployArgs;
     kind : TProxyKind;
-  }) : Promise<ContractV6> {
+  }) : Promise<IContractV6> {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const contractFactory = await this.getFactory(contractName);
@@ -60,13 +60,13 @@ export class HardhatDeployer <
     } else {
       const tx = await deployment.deploymentTransaction();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
+      receipt = await this.provider.waitForTransaction(tx.hash, 3);
 
       return contractFactory.attach(receipt.contractAddress);
     }
   }
 
-  async deployContract (contractName : string, args : TDeployArgs) : Promise<ContractV6> {
+  async deployContract (contractName : string, args : TDeployArgs) : Promise<IContractV6> {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const contractFactory = await this.getFactory(contractName);
@@ -78,7 +78,7 @@ export class HardhatDeployer <
     } else {
       const tx = await deployment.deploymentTransaction();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
+      receipt = await this.provider.waitForTransaction(tx.hash, 3);
 
       return contractFactory.attach(receipt.contractAddress);
     }

@@ -4,7 +4,7 @@ import {
   TLogger,
   IMissionInstances,
   TZNSContractState,
-  ContractV6, IDeployCampaignConfig,
+  IContractV6, IDeployCampaignConfig,
 } from "./types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { ITenderlyContractData, TDeployMissionCtor } from "../missions/types";
@@ -75,7 +75,7 @@ export class DeployCampaign <
     await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission,
+        missionInstance : BaseDeployMission<H, S, P>,
       ) : Promise<void> => {
         await acc;
         return missionInstance.execute();
@@ -94,7 +94,7 @@ export class DeployCampaign <
     this.logger.info("Deploy Campaign execution finished successfully.");
   }
 
-  updateStateContract (instanceName : string, contractName : string, contract : ContractV6) {
+  updateStateContract (instanceName : string, contractName : string, contract : IContractV6) {
     this.state.contracts[instanceName] = contract;
     this.logger.debug(`Data of deployed contract '${contractName}' is added to Campaign state at '${instanceName}'.`);
   }
@@ -103,7 +103,7 @@ export class DeployCampaign <
     return Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission,
+        missionInstance : BaseDeployMission<H, S, P>,
       ) => {
         await acc;
         return missionInstance.verify();
@@ -118,7 +118,7 @@ export class DeployCampaign <
     const contracts = await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<Array<ITenderlyContractData>>,
-        missionInstance : BaseDeployMission,
+        missionInstance : BaseDeployMission<H, S, P>,
       ) : Promise<Array<ITenderlyContractData>> => {
         const newAcc = await acc;
         const data = await missionInstance.getMonitoringData();

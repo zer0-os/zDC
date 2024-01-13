@@ -1,4 +1,4 @@
-import { ContractV6 } from "../campaign/types";
+import { IContractV6 } from "../campaign/types";
 import { TDeployArgs, TProxyKind } from "../missions/types";
 
 
@@ -9,8 +9,8 @@ export interface IHHSubtaskArguments {
 }
 
 export interface IContractFactoryGeneric {
-  deploy : (...args : TDeployArgs) => Promise<ContractV6>;
-  attach : (address : string) => ContractV6;
+  deploy : (...args : TDeployArgs) => Promise<IContractV6>;
+  attach : (address : string) => IContractV6;
 }
 
 export interface ISignerGeneric {
@@ -27,6 +27,14 @@ export interface IProviderGeneric {
     confirmations ?: number | undefined,
     timeout ?: number | undefined
   ) => Promise<ITxReceiptGeneric>;
+}
+
+export interface IContractArtifact {
+  abi : Array<unknown>;
+  bytecode : string;
+  deployedBytecode : string;
+  sourceName : string;
+  contractName : string;
 }
 
 export interface IHardhatGeneric {
@@ -49,13 +57,13 @@ export interface IHardhatGeneric {
       factory : IContractFactoryGeneric,
       args : TDeployArgs,
       options : { kind : TProxyKind; }
-    ) => Promise<ContractV6>;
+    ) => Promise<IContractV6>;
     erc1967 : {
       getImplementationAddress : (address : string) => Promise<string>;
     };
   };
   artifacts : {
     // TODO iso: figure out typing for ABI return
-    readArtifactSync : (contractName : string) => { abi : any; };
+    readArtifactSync : (contractName : string) => IContractArtifact;
   };
 }

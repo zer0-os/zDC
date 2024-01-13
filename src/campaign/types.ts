@@ -1,5 +1,4 @@
 import { BaseDeployMission } from "../missions/base-deploy-mission";
-import { BaseContract } from "ethers";
 import { TDeployMissionCtor } from "../missions/types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
@@ -7,28 +6,52 @@ import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
 import { IHardhatGeneric, IProviderGeneric, ISignerGeneric } from "../deployer/types";
 import { DeployCampaign } from "./deploy-campaign";
 
+// TODO iso: remove this type if the other one works
+// export type ContractV6 = BaseContract & Omit<BaseContract, keyof BaseContract>;
 
-export type ContractV6 = BaseContract & Omit<BaseContract, keyof BaseContract>;
+export interface ITransactionReceipt {
+  hash : string;
+}
+
+export interface IContractV6 {
+  getAddress : () => Promise<string>;
+  // TODO iso: do we need a better type here??
+  waitForDeployment : () => Promise<IContractV6>;
+  // TODO iso: add receipt type here !
+  deploymentTransaction : () => Promise<ITransactionReceipt>;
+}
 
 export type TLogger = WinstonLogger | Console;
 
 export interface IContractState {
-  [key : string] : ContractV6;
+  [key : string] : IContractV6;
 }
 
-export interface IMissionInstances {
-  [key : string] : BaseDeployMission;
+export interface IMissionInstances <
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> {
+  [key : string] : BaseDeployMission<H, S, P>;
 }
 
-export interface ICampaignState {
+export interface ICampaignState <
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> {
   missions : Array<TDeployMissionCtor>;
-  instances : IMissionInstances;
+  instances : IMissionInstances<H, S, P>;
   contracts : TZNSContractState;
 }
 
-export interface ICampaignArgs {
+export interface ICampaignArgs <
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> {
   missions : Array<TDeployMissionCtor>;
-  deployer : HardhatDeployer;
+  deployer : HardhatDeployer<H, S, P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
   // TODO iso: figure out more general type here
@@ -53,4 +76,4 @@ export type IDeployCampaignCtor = new <
   H extends IHardhatGeneric,
   S extends ISignerGeneric,
   P extends IProviderGeneric,
-> (args : ICampaignArgs) => DeployCampaign<H, S, P>;
+> (args : ICampaignArgs<H, S, P>) => DeployCampaign<H, S, P>;

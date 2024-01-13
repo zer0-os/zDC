@@ -6,16 +6,21 @@ import {
   ITenderlyContractData,
 } from "./types";
 import { DeployCampaign } from "../campaign/deploy-campaign";
-import { ContractV6, IDeployCampaignConfig, TLogger } from "../campaign/types";
+import { IContractV6, IDeployCampaignConfig, TLogger } from "../campaign/types";
 import { IContractDbData } from "../db/types";
 import { NetworkData } from "../deployer/constants";
+import { IHardhatGeneric, IProviderGeneric, ISignerGeneric } from "../deployer/types";
 
 
-export class BaseDeployMission {
+export class BaseDeployMission <
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> {
   contractName! : string;
   instanceName! : string;
   proxyData! : IProxyData;
-  campaign : DeployCampaign;
+  campaign : DeployCampaign<H, S, P>;
   logger : TLogger;
   config : IDeployCampaignConfig;
   implAddress! : string | null;
@@ -24,7 +29,7 @@ export class BaseDeployMission {
     campaign,
     logger,
     config,
-  } : IDeployMissionArgs) {
+  } : IDeployMissionArgs<H, S, P>) {
     this.campaign = campaign;
     this.logger = logger;
     this.config = config;
@@ -34,7 +39,7 @@ export class BaseDeployMission {
     return this.campaign.dbAdapter.getContract(this.contractName);
   }
 
-  async saveToDB (contract : ContractV6) {
+  async saveToDB (contract : IContractV6) {
     this.logger.debug(`Writing ${this.contractName} to DB...`);
 
     this.implAddress = this.proxyData.isProxy
@@ -57,7 +62,7 @@ export class BaseDeployMission {
       const contract = await this.campaign.deployer.getContractObject(
         this.contractName,
         dbContract.address,
-      ) as ContractV6;
+      ) ;
 
       // eslint-disable-next-line max-len
       this.logger.debug(`Updating ${this.contractName} in state from DB data with address ${await contract.getAddress()}`);
@@ -77,7 +82,7 @@ export class BaseDeployMission {
   }
 
   async buildDbObject (
-    hhContract : ContractV6,
+    hhContract : IContractV6,
     implAddress : string | null
   ) : Promise<Omit<IContractDbData, "version">> {
     const { abi, bytecode } = this.getArtifact();
@@ -94,7 +99,7 @@ export class BaseDeployMission {
     const deployArgs = await this.deployArgs();
     this.logger.info(`Deploying ${this.contractName} with arguments: ${deployArgs}`);
 
-    let contract : ContractV6;
+    let contract : IContractV6;
     if (this.proxyData.isProxy) {
       contract = await this.campaign.deployer.deployProxy({
         contractName: this.contractName,

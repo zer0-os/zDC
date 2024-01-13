@@ -1,15 +1,24 @@
 import { BaseDeployMission } from "./base-deploy-mission";
 import { DeployCampaign } from "../campaign/deploy-campaign";
 import { IDeployCampaignConfig, TLogger } from "../campaign/types";
+import { IHardhatGeneric, IProviderGeneric, ISignerGeneric } from "../deployer/types";
 
 
-export interface IDeployMissionArgs {
-  campaign : DeployCampaign;
+export interface IDeployMissionArgs <
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> {
+  campaign : DeployCampaign<H, S, P>;
   logger : TLogger;
   config : IDeployCampaignConfig;
 }
 
-export type TDeployMissionCtor = new (args : IDeployMissionArgs) => BaseDeployMission;
+export type TDeployMissionCtor = new <
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> (args : IDeployMissionArgs<H, S, P>) => BaseDeployMission<H, S, P>;
 
 export type TDeployArg = string | Array<string> | bigint | ICurvePriceConfig;
 
