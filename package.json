@@ -21,12 +21,13 @@
     "lint"
   ],
   "dependencies": {
-    "@zero-tech/eslint-config-cpt": "0.2.7",
     "@types/node": "^18.15.11",
-    "typescript": "^5.0.2",
-    "ts-node": "10.9.1",
-    "ethers": "^6.9.0",
+    "@zero-tech/eslint-config-cpt": "0.2.7",
     "eslint": "^8.37.0",
+    "ethers": "^6.9.0",
+    "mongodb": "^6.3.0",
+    "ts-node": "10.9.1",
+    "typescript": "^5.0.2",
     "winston": "^3.11.0"
   }
 }
