@@ -19,7 +19,7 @@ export class DeployCampaign <
   S extends ISignerGeneric,
   P extends IProviderGeneric,
 > {
-  state : ICampaignState;
+  state : ICampaignState<H, S, P>;
   deployer : HardhatDeployer<H, S, P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
@@ -36,7 +36,7 @@ export class DeployCampaign <
     dbAdapter,
     logger,
     config,
-  } : ICampaignArgs) {
+  } : ICampaignArgs<H, S, P>) {
     this.state = {
       missions,
       instances: {},
@@ -51,7 +51,7 @@ export class DeployCampaign <
 
     // instantiate all missions
     this.state.instances = missions.reduce(
-      (acc : IMissionInstances, mission : TDeployMissionCtor) => {
+      (acc : IMissionInstances<H, S, P>, mission : TDeployMissionCtor) => {
         const instance = new mission({
           campaign: campaignProxy,
           logger,

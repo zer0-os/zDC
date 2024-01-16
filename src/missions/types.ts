@@ -4,6 +4,10 @@ import { IDeployCampaignConfig, TLogger } from "../campaign/types";
 import { IHardhatGeneric, IProviderGeneric, ISignerGeneric } from "../deployer/types";
 
 
+export interface IConfigGeneric {
+  [key : string] : unknown;
+}
+
 export interface IDeployMissionArgs <
   H extends IHardhatGeneric,
   S extends ISignerGeneric,
@@ -20,7 +24,7 @@ export type TDeployMissionCtor = new <
   P extends IProviderGeneric,
 > (args : IDeployMissionArgs<H, S, P>) => BaseDeployMission<H, S, P>;
 
-export type TDeployArg = string | Array<string> | bigint | ICurvePriceConfig;
+export type TDeployArg = string | Array<string> | bigint | IConfigGeneric;
 
 export type TDeployArgs = Array<TDeployArg>;
 
