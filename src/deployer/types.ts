@@ -67,3 +67,14 @@ export interface IHardhatGeneric {
     readArtifactSync : (contractName : string) => IContractArtifact;
   };
 }
+
+export interface IHardhatDeployerArgs<
+  H extends IHardhatGeneric,
+  S extends ISignerGeneric,
+  P extends IProviderGeneric,
+> {
+  hre : H;
+  signer : S;
+  env : string;
+  provider ?: P;
+}

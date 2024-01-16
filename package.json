@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/zer0-os/zDC.git"
   },
-  "main": "index.ts",
+  "main": "src/index.ts",
   "engines": {
     "node": ">=18",
     "npm": ">=9"
