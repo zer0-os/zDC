@@ -7,7 +7,7 @@ import { TLogger } from "../../campaign/types";
 
 export class DBVersioner {
   curDbVersion : string;
-  contractsVersion ?: string;
+  contractsVersion : string;
   archiveCurrentDeployed : boolean;
   logger : TLogger;
 
@@ -22,9 +22,11 @@ export class DBVersioner {
   } : IDBVersionerArgs) {
     if (!contractsVersion) {
       logger.warn("No contracts version/tag provided to MongoDBAdapter! Only the DB version will be written.");
+      this.contractsVersion = "0";
+    } else {
+      this.contractsVersion = contractsVersion;
     }
 
-    this.contractsVersion = contractsVersion;
     this.curDbVersion = dbVersion || "0";
     this.archiveCurrentDeployed = !!archive;
     this.logger = logger;
