@@ -119,6 +119,10 @@ export class MongoDBAdapter {
     return this.versioner.clearDBForVersion(version);
   }
 
+  async finalize (version ?: string) {
+    await this.versioner.finalizeDeployedVersion(version);
+  }
+
   async dropDB () {
     await this.db.dropDatabase();
     this.logger.info("Database dropped successfully.");

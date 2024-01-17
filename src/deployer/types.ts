@@ -45,8 +45,8 @@ export interface IHardhatGeneric {
   ) => Promise<void>;
   ethers : {
     getContractFactory : (
-      contractName : string,
-      signer : ISignerGeneric
+      name : string,
+      signerOrOptions ?: ISignerGeneric | { signer ?: ISignerGeneric; libraries ?: unknown; }
     ) => Promise<IContractFactoryGeneric>;
     provider : {
       getCode : (address : string) => Promise<string>;
