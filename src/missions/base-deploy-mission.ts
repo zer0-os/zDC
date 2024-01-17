@@ -62,7 +62,7 @@ export class BaseDeployMission <
       const contract = await this.campaign.deployer.getContractObject(
         this.contractName,
         dbContract.address,
-      ) ;
+      );
 
       // eslint-disable-next-line max-len
       this.logger.debug(`Updating ${this.contractName} in state from DB data with address ${await contract.getAddress()}`);

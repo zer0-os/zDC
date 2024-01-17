@@ -37,6 +37,24 @@ export interface IContractArtifact {
   contractName : string;
 }
 
+export interface IFactoryOpts {
+  signer ?: ISignerBase;
+  libraries ?: unknown;
+}
+
+export type TGetFactoryArgsOne = [
+  name : string,
+  signerOrOptions ?: ISignerBase | IFactoryOpts
+];
+
+export type TGetFactoryArgsTwo = [
+  abi : Array<unknown>,
+  bytecode : string,
+  signer ?: ISignerBase
+];
+
+export type TGetFactoryArgs = TGetFactoryArgsOne | TGetFactoryArgsTwo;
+
 export interface IHardhatBase {
   run : (
     taskIdentifier : string | { scope ?: string; task : string; },
@@ -45,8 +63,7 @@ export interface IHardhatBase {
   ) => Promise<void>;
   ethers : {
     getContractFactory : (
-      name : string,
-      signerOrOptions ?: ISignerBase | { signer ?: ISignerBase; libraries ?: unknown; }
+      ...args : TGetFactoryArgsOne
     ) => Promise<IContractFactoryBase>;
     provider : {
       getCode : (address : string) => Promise<string>;
