@@ -10,14 +10,14 @@ import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { ITenderlyContractData, TDeployMissionCtor } from "../missions/types";
 import { BaseDeployMission } from "../missions/base-deploy-mission";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IHardhatGeneric, IProviderGeneric, ISignerGeneric } from "../deployer/types";
+import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
 import { makeCampaignProxy } from "./proxy";
 
 
 export class DeployCampaign <
-  H extends IHardhatGeneric,
-  S extends ISignerGeneric,
-  P extends IProviderGeneric,
+  H extends IHardhatBase,
+  S extends ISignerBase,
+  P extends IProviderBase,
 > {
   state : ICampaignState<H, S, P>;
   deployer : HardhatDeployer<H, S, P>;

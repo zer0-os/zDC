@@ -8,25 +8,25 @@ export interface IHHSubtaskArguments {
   [subtaskName : string] : THHTaskArguments;
 }
 
-export interface IContractFactoryGeneric {
+export interface IContractFactoryBase {
   deploy : (...args : TDeployArgs) => Promise<IContractV6>;
   attach : (address : string) => IContractV6;
 }
 
-export interface ISignerGeneric {
+export interface ISignerBase {
   address : string;
 }
 
-export interface ITxReceiptGeneric {
+export interface ITxReceiptBase {
   contractAddress : string;
 }
 
-export interface IProviderGeneric {
+export interface IProviderBase {
   waitForTransaction : (
     txHash : string,
     confirmations ?: number | undefined,
     timeout ?: number | undefined
-  ) => Promise<ITxReceiptGeneric>;
+  ) => Promise<ITxReceiptBase>;
 }
 
 export interface IContractArtifact {
@@ -37,7 +37,7 @@ export interface IContractArtifact {
   contractName : string;
 }
 
-export interface IHardhatGeneric {
+export interface IHardhatBase {
   run : (
     taskIdentifier : string | { scope ?: string; task : string; },
     taskArguments ?: THHTaskArguments,
@@ -46,15 +46,15 @@ export interface IHardhatGeneric {
   ethers : {
     getContractFactory : (
       name : string,
-      signerOrOptions ?: ISignerGeneric | { signer ?: ISignerGeneric; libraries ?: unknown; }
-    ) => Promise<IContractFactoryGeneric>;
+      signerOrOptions ?: ISignerBase | { signer ?: ISignerBase; libraries ?: unknown; }
+    ) => Promise<IContractFactoryBase>;
     provider : {
       getCode : (address : string) => Promise<string>;
     };
   };
   upgrades : {
     deployProxy : (
-      factory : IContractFactoryGeneric,
+      factory : IContractFactoryBase,
       args : TDeployArgs,
       options : { kind : TProxyKind; }
     ) => Promise<IContractV6>;
@@ -69,9 +69,9 @@ export interface IHardhatGeneric {
 }
 
 export interface IHardhatDeployerArgs<
-  H extends IHardhatGeneric,
-  S extends ISignerGeneric,
-  P extends IProviderGeneric,
+  H extends IHardhatBase,
+  S extends ISignerBase,
+  P extends IProviderBase,
 > {
   hre : H;
   signer : S;

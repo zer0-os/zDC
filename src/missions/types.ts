@@ -1,7 +1,7 @@
 import { BaseDeployMission } from "./base-deploy-mission";
 import { DeployCampaign } from "../campaign/deploy-campaign";
 import { IDeployCampaignConfig, TLogger } from "../campaign/types";
-import { IHardhatGeneric, IProviderGeneric, ISignerGeneric } from "../deployer/types";
+import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
 
 
 export interface IConfigGeneric {
@@ -9,9 +9,9 @@ export interface IConfigGeneric {
 }
 
 export interface IDeployMissionArgs <
-  H extends IHardhatGeneric,
-  S extends ISignerGeneric,
-  P extends IProviderGeneric,
+  H extends IHardhatBase,
+  S extends ISignerBase,
+  P extends IProviderBase,
 > {
   campaign : DeployCampaign<H, S, P>;
   logger : TLogger;
@@ -19,9 +19,9 @@ export interface IDeployMissionArgs <
 }
 
 export type TDeployMissionCtor = new <
-  H extends IHardhatGeneric,
-  S extends ISignerGeneric,
-  P extends IProviderGeneric,
+  H extends IHardhatBase,
+  S extends ISignerBase,
+  P extends IProviderBase,
 > (args : IDeployMissionArgs<H, S, P>) => BaseDeployMission<H, S, P>;
 
 export type TDeployArg = string | Array<string> | bigint | IConfigGeneric;

@@ -9,13 +9,13 @@ import { DeployCampaign } from "../campaign/deploy-campaign";
 import { IContractV6, IDeployCampaignConfig, TLogger } from "../campaign/types";
 import { IContractDbData } from "../db/types";
 import { NetworkData } from "../deployer/constants";
-import { IHardhatGeneric, IProviderGeneric, ISignerGeneric } from "../deployer/types";
+import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
 
 
 export class BaseDeployMission <
-  H extends IHardhatGeneric,
-  S extends ISignerGeneric,
-  P extends IProviderGeneric,
+  H extends IHardhatBase,
+  S extends ISignerBase,
+  P extends IProviderBase,
 > {
   contractName! : string;
   instanceName! : string;

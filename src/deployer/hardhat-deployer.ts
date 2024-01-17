@@ -2,13 +2,13 @@ import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/type
 // TODO iso: possibly use Node's native API POST for Tenderly push so we don't need axios
 import axios from "axios";
 import { IContractV6 } from "../campaign/types";
-import { IHardhatGeneric, ISignerGeneric, IProviderGeneric, IHardhatDeployerArgs } from "./types";
+import { IHardhatBase, ISignerBase, IProviderBase, IHardhatDeployerArgs } from "./types";
 
 
 export class HardhatDeployer <
-  H extends IHardhatGeneric,
-  S extends ISignerGeneric,
-  P extends IProviderGeneric,
+  H extends IHardhatBase,
+  S extends ISignerBase,
+  P extends IProviderBase,
 > {
   hre : H;
   signer : S;
