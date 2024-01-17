@@ -8,12 +8,15 @@
     "type": "git",
     "url": "git+https://github.com/zer0-os/zDC.git"
   },
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "engines": {
     "node": ">=18",
     "npm": ">=9"
   },
   "scripts": {
+    "build": "tsc",
+    "prepublish": "yarn build",
     "test": "test",
     "lint-ts": "yarn eslint ./src/** ./test/** --ext .ts"
   },
