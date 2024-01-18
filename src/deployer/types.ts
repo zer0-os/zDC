@@ -42,18 +42,13 @@ export interface IFactoryOpts {
   libraries ?: unknown;
 }
 
-export type TGetFactoryArgsOne = [
+export type TGetFactoryArgs<
+  S extends ISignerBase,
+  O extends IFactoryOpts,
+> = [
   name : string,
-  signerOrOptions ?: ISignerBase | IFactoryOpts
+  signerOrOptions ?: S | O,
 ];
-
-export type TGetFactoryArgsTwo = [
-  abi : Array<unknown>,
-  bytecode : string,
-  signer ?: ISignerBase
-];
-
-export type TGetFactoryArgs = TGetFactoryArgsOne | TGetFactoryArgsTwo;
 
 export interface IHardhatBase {
   run : (
@@ -62,16 +57,20 @@ export interface IHardhatBase {
     subtaskArguments ?: IHHSubtaskArguments
   ) => Promise<void>;
   ethers : {
-    getContractFactory : (
-      ...args : TGetFactoryArgsOne
-    ) => Promise<IContractFactoryBase>;
+    getContractFactory : <
+      F extends IContractFactoryBase,
+      S extends ISignerBase,
+      O extends IFactoryOpts,
+    > (
+      ...args : TGetFactoryArgs<S, O>
+    ) => Promise<F>;
     provider : {
       getCode : (address : string) => Promise<string>;
     };
   };
   upgrades : {
-    deployProxy : (
-      factory : IContractFactoryBase,
+    deployProxy : <F extends IContractFactoryBase> (
+      factory : F,
       args : TDeployArgs,
       options : { kind : TProxyKind; }
     ) => Promise<IContractV6>;

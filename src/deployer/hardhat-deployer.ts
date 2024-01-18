@@ -60,7 +60,7 @@ export class HardhatDeployer <
     } else {
       const tx = await deployment.deploymentTransaction();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx.hash, 3);
+      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
 
       return contractFactory.attach(receipt.contractAddress);
     }
@@ -78,7 +78,7 @@ export class HardhatDeployer <
     } else {
       const tx = await deployment.deploymentTransaction();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx.hash, 3);
+      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
 
       return contractFactory.attach(receipt.contractAddress);
     }

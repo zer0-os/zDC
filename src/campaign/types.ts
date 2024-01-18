@@ -13,12 +13,23 @@ export interface ITransactionReceipt {
   hash : string;
 }
 
+export interface IGenericMap {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key : string] : any;
+}
+
+export interface IAddressable {
+  getAddress : () => Promise<string>;
+}
+
 export interface IContractV6 {
   getAddress : () => Promise<string>;
   // TODO iso: do we need a better type here??
   waitForDeployment : () => Promise<IContractV6>;
   // TODO iso: add receipt type here !
-  deploymentTransaction : () => Promise<ITransactionReceipt>;
+  deploymentTransaction : () => ITransactionReceipt | null;
+  target : string | IAddressable;
+  interface : IGenericMap;
 }
 
 export type TLogger = WinstonLogger | Console;
