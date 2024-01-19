@@ -3,8 +3,7 @@ import {
   ICampaignState,
   TLogger,
   IMissionInstances,
-  TZNSContractState,
-  IContractV6, IDeployCampaignConfig,
+  IContractV6, IDeployCampaignConfig, IContractState,
 } from "./types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { ITenderlyContractData, TDeployMissionCtor } from "../missions/types";
@@ -18,8 +17,9 @@ export class DeployCampaign <
   H extends IHardhatBase,
   S extends ISignerBase,
   P extends IProviderBase,
+  St extends IContractState<IContractV6>,
 > {
-  state : ICampaignState<H, S, P>;
+  state : ICampaignState<H, S, P, St>;
   deployer : HardhatDeployer<H, S, P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
@@ -40,7 +40,7 @@ export class DeployCampaign <
     this.state = {
       missions,
       instances: {},
-      contracts: {} as TZNSContractState,
+      contracts: {} as St,
     };
     this.deployer = deployer;
     this.dbAdapter = dbAdapter;
@@ -51,7 +51,7 @@ export class DeployCampaign <
 
     // instantiate all missions
     this.state.instances = missions.reduce(
-      (acc : IMissionInstances<H, S, P>, mission : TDeployMissionCtor) => {
+      (acc : IMissionInstances<H, S, P, St>, mission : TDeployMissionCtor) => {
         const instance = new mission({
           campaign: campaignProxy,
           logger,
@@ -75,7 +75,7 @@ export class DeployCampaign <
     await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<H, S, P>,
+        missionInstance : BaseDeployMission<H, S, P, St>,
       ) : Promise<void> => {
         await acc;
         return missionInstance.execute();
@@ -95,7 +95,8 @@ export class DeployCampaign <
   }
 
   updateStateContract (instanceName : string, contractName : string, contract : IContractV6) {
-    this.state.contracts[instanceName] = contract;
+    // TODO iso: can we improve this?
+    (this.state.contracts as IContractState)[instanceName] = contract;
     this.logger.debug(`Data of deployed contract '${contractName}' is added to Campaign state at '${instanceName}'.`);
   }
 
@@ -103,7 +104,7 @@ export class DeployCampaign <
     return Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<H, S, P>,
+        missionInstance : BaseDeployMission<H, S, P, St>,
       ) => {
         await acc;
         return missionInstance.verify();
@@ -118,7 +119,7 @@ export class DeployCampaign <
     const contracts = await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<Array<ITenderlyContractData>>,
-        missionInstance : BaseDeployMission<H, S, P>,
+        missionInstance : BaseDeployMission<H, S, P, St>,
       ) : Promise<Array<ITenderlyContractData>> => {
         const newAcc = await acc;
         const data = await missionInstance.getMonitoringData();

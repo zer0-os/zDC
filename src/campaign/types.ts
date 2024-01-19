@@ -4,7 +4,6 @@ import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
 import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
-import { DeployCampaign } from "./deploy-campaign";
 
 // TODO iso: remove this type if the other one works
 // export type ContractV6 = BaseContract & Omit<BaseContract, keyof BaseContract>;
@@ -34,26 +33,28 @@ export interface IContractV6 {
 
 export type TLogger = WinstonLogger | Console;
 
-export interface IContractState {
-  [key : string] : IContractV6;
+export interface IContractState<C extends IContractV6 = IContractV6> {
+  [key : string] : C;
 }
 
 export interface IMissionInstances <
   H extends IHardhatBase,
   S extends ISignerBase,
   P extends IProviderBase,
+  St extends IContractState,
 > {
-  [key : string] : BaseDeployMission<H, S, P>;
+  [key : string] : BaseDeployMission<H, S, P, St>;
 }
 
 export interface ICampaignState <
   H extends IHardhatBase,
   S extends ISignerBase,
   P extends IProviderBase,
+  St extends IContractState,
 > {
   missions : Array<TDeployMissionCtor>;
-  instances : IMissionInstances<H, S, P>;
-  contracts : TZNSContractState;
+  instances : IMissionInstances<H, S, P, St>;
+  contracts : St;
 }
 
 export interface ICampaignArgs <
@@ -69,9 +70,6 @@ export interface ICampaignArgs <
   config : IDeployCampaignConfig;
 }
 
-// TODO iso: figure out more general type here or remove this if works out of the box
-export type TZNSContractState = IContractState;
-
 export interface IDeployCampaignConfig {
   // TODO iso: figure out more general type here
   [key : string] : any;
@@ -82,9 +80,3 @@ export interface IDeployCampaignConfig {
     verifyContracts : boolean;
   };
 }
-
-export type IDeployCampaignCtor = new <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  P extends IProviderBase,
-> (args : ICampaignArgs<H, S, P>) => DeployCampaign<H, S, P>;

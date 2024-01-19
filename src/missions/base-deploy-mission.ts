@@ -6,7 +6,7 @@ import {
   ITenderlyContractData,
 } from "./types";
 import { DeployCampaign } from "../campaign/deploy-campaign";
-import { IContractV6, IDeployCampaignConfig, TLogger } from "../campaign/types";
+import { IContractState, IContractV6, IDeployCampaignConfig, TLogger } from "../campaign/types";
 import { IContractDbData } from "../db/types";
 import { NetworkData } from "../deployer/constants";
 import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
@@ -16,11 +16,12 @@ export class BaseDeployMission <
   H extends IHardhatBase,
   S extends ISignerBase,
   P extends IProviderBase,
+  St extends IContractState,
 > {
   contractName! : string;
   instanceName! : string;
   proxyData! : IProxyData;
-  campaign : DeployCampaign<H, S, P>;
+  campaign : DeployCampaign<H, S, P, St>;
   logger : TLogger;
   config : IDeployCampaignConfig;
   implAddress! : string | null;
@@ -29,7 +30,7 @@ export class BaseDeployMission <
     campaign,
     logger,
     config,
-  } : IDeployMissionArgs<H, S, P>) {
+  } : IDeployMissionArgs<H, S, P, St>) {
     this.campaign = campaign;
     this.logger = logger;
     this.config = config;

@@ -1,5 +1,4 @@
 import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
-// TODO iso: possibly use Node's native API POST for Tenderly push so we don't need axios
 import axios from "axios";
 import { IContractV6 } from "../campaign/types";
 import { IHardhatBase, ISignerBase, IProviderBase, IHardhatDeployerArgs } from "./types";
