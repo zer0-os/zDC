@@ -23,7 +23,7 @@ export class BaseDeployMission <
   proxyData! : IProxyData;
   campaign : DeployCampaign<H, S, P, St>;
   logger : TLogger;
-  config : IDeployCampaignConfig;
+  config : IDeployCampaignConfig<S>;
   implAddress! : string | null;
 
   constructor ({

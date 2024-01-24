@@ -24,7 +24,7 @@ export class DeployCampaign <
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
   // TODO iso: figure out more general type here
-  config : IDeployCampaignConfig;
+  config : IDeployCampaignConfig<S>;
 
   // TODO dep: improve typing here so that methods of each contract type are resolved in Mission classes!
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -95,7 +95,7 @@ export class DeployCampaign <
   }
 
   updateStateContract (instanceName : string, contractName : string, contract : IContractV6) {
-    // TODO iso: can we improve this?
+    // TODO: can we improve this?
     (this.state.contracts as IContractState)[instanceName] = contract;
     this.logger.debug(`Data of deployed contract '${contractName}' is added to Campaign state at '${instanceName}'.`);
   }

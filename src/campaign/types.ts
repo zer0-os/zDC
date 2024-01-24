@@ -12,9 +12,9 @@ export interface ITransactionReceipt {
   hash : string;
 }
 
-export interface IGenericMap {
+export interface IGenericMap<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key : string] : any;
+  [key : string] : bigint | string | number | boolean | object | T | IGenericMap<T>;
 }
 
 export interface IAddressable {
@@ -28,7 +28,7 @@ export interface IContractV6 {
   // TODO iso: add receipt type here !
   deploymentTransaction : () => ITransactionReceipt | null;
   target : string | IAddressable;
-  interface : IGenericMap;
+  interface : object;
 }
 
 export type TLogger = WinstonLogger | Console;
@@ -67,13 +67,12 @@ export interface ICampaignArgs <
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
   // TODO iso: figure out more general type here
-  config : IDeployCampaignConfig;
+  config : IDeployCampaignConfig<S>;
 }
 
-export interface IDeployCampaignConfig {
-  // TODO iso: figure out more general type here
-  [key : string] : any;
+export interface IDeployCampaignConfig <Signer> extends IGenericMap<Signer> {
   env : string;
+  deployAdmin : Signer;
   postDeploy : {
     tenderlyProjectSlug : string;
     monitorContracts : boolean;

@@ -16,7 +16,7 @@ export interface IDeployMissionArgs <
 > {
   campaign : DeployCampaign<H, S, P, St>;
   logger : TLogger;
-  config : IDeployCampaignConfig;
+  config : IDeployCampaignConfig<S>;
 }
 
 export type TDeployMissionCtor = new <
