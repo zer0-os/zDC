@@ -80,7 +80,6 @@ export interface IHardhatBase {
     };
   };
   artifacts : {
-    // TODO iso: figure out typing for ABI return
     readArtifactSync : (contractName : string) => IContractArtifact;
   };
 }

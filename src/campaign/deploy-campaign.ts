@@ -23,7 +23,6 @@ export class DeployCampaign <
   deployer : HardhatDeployer<H, S, P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
-  // TODO iso: figure out more general type here
   config : IDeployCampaignConfig<S>;
 
   // TODO dep: improve typing here so that methods of each contract type are resolved in Mission classes!

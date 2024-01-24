@@ -5,8 +5,6 @@ import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
 import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
 
-// TODO iso: remove this type if the other one works
-// export type ContractV6 = BaseContract & Omit<BaseContract, keyof BaseContract>;
 
 export interface ITransactionReceipt {
   hash : string;
@@ -31,9 +29,7 @@ export interface IAddressable {
 
 export interface IContractV6 {
   getAddress : () => Promise<string>;
-  // TODO iso: do we need a better type here??
   waitForDeployment : () => Promise<IContractV6>;
-  // TODO iso: add receipt type here !
   deploymentTransaction : () => ITransactionReceipt | null;
   target : string | IAddressable;
   interface : object;
@@ -74,7 +70,6 @@ export interface ICampaignArgs <
   deployer : HardhatDeployer<H, S, P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
-  // TODO iso: figure out more general type here
   config : IDeployCampaignConfig<S>;
 }
 

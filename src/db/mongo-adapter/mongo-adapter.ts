@@ -31,7 +31,6 @@ export class MongoDBAdapter {
     archive,
   } : IMongoDBAdapterArgs) {
     this.logger = logger;
-    // TODO iso: make it general. how do we properly pass it here and how do we structure args ??
     this.client = new MongoClient(dbUri, clientOpts);
     this.dbUri = dbUri;
     this.dbName = dbName;
