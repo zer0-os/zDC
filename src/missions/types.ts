@@ -1,12 +1,8 @@
 import { BaseDeployMission } from "./base-deploy-mission";
 import { DeployCampaign } from "../campaign/deploy-campaign";
-import { IContractState, IDeployCampaignConfig, TLogger } from "../campaign/types";
+import { IContractState, IDeployCampaignConfig, TCampaignDataType, TLogger } from "../campaign/types";
 import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
 
-
-export interface IConfigGeneric {
-  [key : string] : unknown;
-}
 
 export interface IDeployMissionArgs <
   H extends IHardhatBase,
@@ -26,7 +22,7 @@ export type TDeployMissionCtor = new <
   St extends IContractState,
 > (args : IDeployMissionArgs<H, S, P, St>) => BaseDeployMission<H, S, P, St>;
 
-export type TDeployArg = string | Array<string> | bigint | IConfigGeneric;
+export type TDeployArg = TCampaignDataType;
 
 export type TDeployArgs = Array<TDeployArg>;
 

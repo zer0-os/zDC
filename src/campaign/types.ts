@@ -12,9 +12,17 @@ export interface ITransactionReceipt {
   hash : string;
 }
 
-export interface IGenericMap<T> {
+export type TCampaignDataType = bigint
+  | string
+  | number
+  | Array<string>
+  | Array<bigint>
+  | boolean
+  | object;
+
+export interface IBaseDataMap<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key : string] : bigint | string | number | boolean | object | T | IGenericMap<T>;
+  [key : string] : TCampaignDataType | T | IBaseDataMap<T>;
 }
 
 export interface IAddressable {
@@ -70,7 +78,7 @@ export interface ICampaignArgs <
   config : IDeployCampaignConfig<S>;
 }
 
-export interface IDeployCampaignConfig <Signer> extends IGenericMap<Signer> {
+export interface IDeployCampaignConfig <Signer> extends IBaseDataMap<Signer> {
   env : string;
   deployAdmin : Signer;
   postDeploy : {
