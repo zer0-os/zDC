@@ -15,6 +15,7 @@ export interface IContractFactoryBase {
 
 export interface ISignerBase {
   address : string;
+  getAddress ?: () => Promise<string>;
 }
 
 export interface ITxReceiptBase {
