@@ -7,6 +7,14 @@ zDC is a library of modular entities that can help with deploying smart contract
 Each entity needs to be used together with the Campaign or can be used separately based on your needs
 for its individual functionality.
 
+## Main Features
+- Controlled configurable deployment of smart contracts on EVM chains with logging of every step.
+- Support for extensions for every entity in the module. Possible to use your own deployers, DB adapters, loggers, etc.
+- Built-in support for Hardhat, Ethers and OZ Defender to deploy and access contracts on-chain.
+- Built-in support for MongoDB to store data about deployed contracts for easy access by any application.
+- Built-in support for Etherscan contract verification to verify deployed contracts on Etherscan (optional).
+- Built-in support for Tenderly to push deployed contracts to Tenderly projects for easy debugging (optional).
+
 ## Entities
 ### Deploy Campaign
 [Source](./src/campaign/deploy-campaign.ts)
