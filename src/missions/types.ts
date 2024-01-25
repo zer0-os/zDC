@@ -15,12 +15,12 @@ export interface IDeployMissionArgs <
   config : IDeployCampaignConfig<S>;
 }
 
-export type TDeployMissionCtor = new <
+export type TDeployMissionCtor<
   H extends IHardhatBase,
   S extends ISignerBase,
   P extends IProviderBase,
   St extends IContractState,
-> (args : IDeployMissionArgs<H, S, P, St>) => BaseDeployMission<H, S, P, St>;
+> = new (args : IDeployMissionArgs<H, S, P, St>) => BaseDeployMission<H, S, P, St>;
 
 export type TDeployArg = TCampaignDataType;
 

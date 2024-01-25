@@ -56,7 +56,7 @@ export interface ICampaignState <
   P extends IProviderBase,
   St extends IContractState,
 > {
-  missions : Array<TDeployMissionCtor>;
+  missions : Array<TDeployMissionCtor<H, S, P, St>>;
   instances : IMissionInstances<H, S, P, St>;
   contracts : St;
 }
@@ -65,8 +65,9 @@ export interface ICampaignArgs <
   H extends IHardhatBase,
   S extends ISignerBase,
   P extends IProviderBase,
+  St extends IContractState,
 > {
-  missions : Array<TDeployMissionCtor>;
+  missions : Array<TDeployMissionCtor<H, S, P, St>>;
   deployer : HardhatDeployer<H, S, P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;

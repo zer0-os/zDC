@@ -35,7 +35,7 @@ export class DeployCampaign <
     dbAdapter,
     logger,
     config,
-  } : ICampaignArgs<H, S, P>) {
+  } : ICampaignArgs<H, S, P, St>) {
     this.state = {
       missions,
       instances: {},
@@ -50,7 +50,7 @@ export class DeployCampaign <
 
     // instantiate all missions
     this.state.instances = missions.reduce(
-      (acc : IMissionInstances<H, S, P, St>, mission : TDeployMissionCtor) => {
+      (acc : IMissionInstances<H, S, P, St>, mission : TDeployMissionCtor<H, S, P, St>) => {
         const instance = new mission({
           campaign: campaignProxy,
           logger,
