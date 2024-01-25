@@ -65,8 +65,6 @@ export class MongoDBAdapter {
 
     this.contracts = this.db.collection(COLL_NAMES.contracts);
 
-    // TODO dep: can we use this prop in all the contract getters to not
-    //  have to determine them dynamically every time ?? is this reliable enough?
     this.curDbVersion = await this.versioner.configureVersioning(this.db, version);
 
     return this.db;

@@ -1,9 +1,9 @@
 {
   "name": "@zero-tech/zdc",
-  "version": "0.5.0",
+  "version": "0.1.0",
   "description": "Zero Deploy Campaign",
   "author": "Zero CPT",
-  "license": "ISC",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zer0-os/zDC.git"
@@ -17,20 +17,24 @@
   "scripts": {
     "build": "tsc",
     "prepublish": "yarn build",
-    "test": "test",
     "lint": "yarn eslint ./src/** --ext .ts"
   },
   "pre-commit": [
     "lint"
   ],
+  "pre-publish": [
+    "build"
+  ],
   "dependencies": {
-    "@types/node": "^18.15.11",
-    "@zero-tech/eslint-config-cpt": "0.2.7",
     "axios": "^1.6.5",
-    "eslint": "^8.56.0",
     "mongodb": "^6.3.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@zero-tech/eslint-config-cpt": "0.2.7",
+    "eslint": "^8.56.0",
     "ts-node": "10.9.1",
     "typescript": "^5.0.2",
-    "winston": "^3.11.0"
+    "@types/node": "^18.15.11"
   }
 }
