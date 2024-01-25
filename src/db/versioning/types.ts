@@ -7,3 +7,9 @@ export interface IDBVersionerArgs {
   archive ?: boolean;
   logger : TLogger;
 }
+
+export interface IDBVersion {
+  dbVersion : string;
+  contractsVersion : string;
+  type : string;
+}

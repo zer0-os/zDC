@@ -14,8 +14,3 @@ export interface IMongoDBAdapterArgs {
   archive ?: boolean;
 }
 
-export interface IDBVersion {
-  dbVersion : string;
-  contractsVersion : string;
-  type : string;
-}

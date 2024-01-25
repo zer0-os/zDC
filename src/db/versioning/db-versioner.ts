@@ -1,7 +1,6 @@
 import { Collection, Db } from "mongodb";
-import { IDBVersionerArgs } from "./types";
+import { IDBVersion, IDBVersionerArgs } from "./types";
 import { COLL_NAMES, VERSION_TYPES } from "../mongo-adapter/constants";
-import { IDBVersion } from "../mongo-adapter/types";
 import { TLogger } from "../../campaign/types";
 
 
