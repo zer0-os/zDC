@@ -15,16 +15,13 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
-      - run: yarn build
       - run: yarn lint
+      - run: yarn build
       - persist_to_workspace:
           root: ~/repo
           paths: [.]
 workflows:
   version: 2
   build:
-    jobs:
-      - build
-  master:
     jobs:
       - build
