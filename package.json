@@ -16,14 +16,11 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepublish": "yarn build",
+    "prepare": "yarn build",
     "lint": "yarn eslint ./src/** --ext .ts"
   },
   "pre-commit": [
     "lint"
-  ],
-  "pre-publish": [
-    "build"
   ],
   "dependencies": {
     "axios": "^1.6.5",
