@@ -20,7 +20,7 @@ export class DBVersioner {
     logger,
   } : IDBVersionerArgs) {
     if (!contractsVersion) {
-      logger.warn("No contracts version/tag provided to MongoDBAdapter! Only the DB version will be written.");
+      logger.info("No contracts version/tag provided to MongoDBAdapter! Only the DB version will be written.");
       this.contractsVersion = "0";
     } else {
       this.contractsVersion = contractsVersion;
@@ -33,7 +33,6 @@ export class DBVersioner {
     this.versions = {} as Collection<IDBVersion>;
   }
 
-  // Versioning methods
   async configureVersioning (db : Db, version ?: string) {
     this.versions = db.collection(COLL_NAMES.versions);
 
@@ -47,7 +46,7 @@ export class DBVersioner {
       if (!deployedV || version !== deployedV.dbVersion) {
         // we should only have a single TEMP version at any given time
         if (tempV && version !== tempV.dbVersion) {
-          await this.clearDBForVersion(tempV.dbVersion);
+          await this.clearDBForVersion(tempV.dbVersion, db);
         }
 
         await this.createUpdateTempVersion(finalVersion);
@@ -70,7 +69,7 @@ export class DBVersioner {
         } else {
           this.logger.debug("Archiving disabled - Clearing current DEPLOYED DB version...");
           // get the current DEPLOYED and clear DB for that version
-          if (deployedV) await this.clearDBForVersion(deployedV.dbVersion);
+          if (deployedV) await this.clearDBForVersion(deployedV.dbVersion, db);
         }
 
         // create new TEMP version
@@ -182,7 +181,15 @@ export class DBVersioner {
     });
   }
 
-  async clearDBForVersion (version : string) {
+  async clearDBForVersion (version : string, db ?: Db) {
+    if (db) {
+      const contracts = db.collection(COLL_NAMES.contracts);
+
+      await contracts.deleteMany({
+        version,
+      });
+    }
+
     return this.versions.deleteMany({
       dbVersion: version,
     });
