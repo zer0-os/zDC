@@ -5,6 +5,7 @@ let logger : TLogger | null = null;
 
 
 export const createLogger = (logLevel ?: string, silent ?: boolean) => winston.createLogger({
+  levels: winston.config.npm.levels,
   level: logLevel,
   format: winston.format.combine(
     winston.format.json(),
