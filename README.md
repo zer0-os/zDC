@@ -13,7 +13,7 @@ for its individual functionality.
 - Built-in support for Hardhat, Ethers and OZ Defender to deploy and access contracts on-chain.
 - Built-in support for MongoDB to store data about deployed contracts for easy access by any application.
 - Built-in support for Etherscan contract verification to verify deployed contracts on Etherscan (optional).
-- Built-in support for Tenderly to push deployed contracts to Tenderly projects for easy debugging (optional).
+- Built-in support for Tenderly to push deployed contracts to Tenderly projects for monitoring and easy debugging (optional).
 
 ## Entities
 ### Deploy Campaign
@@ -76,24 +76,52 @@ A simple logger that is used to log data to the console and to a file. Based on 
 Uses ENV variables to detemine levels and silencing.
 
 ## Usage
+
+### Environment Variables
+Set these in the module where you imported this library.
+```dotenv
+ENV_LEVEL= # "dev", "test" or "prod"
+# DB
+MONGO_DB_URI=
+MONGO_DB_NAME=
+MONGO_DB_CLIENT_OPTS= # options for MongoClient class from mongo package (optional)
+ARCHIVE_PREVIOUS_DB_VERSION= # if "true" - save all the data from previous `dbVersion`, if "false" - delete it (optional, default: false)
+# Logger
+LOG_LEVEL= # winston log level (optional, default: info)
+SILENT_LOGGER= # if "true" - silence the logger (optional, default: false)
+# Integrations
+TENDERLY_ACCESS_KEY= # if integrating with Tenderly, provide an access key (optional)
+TENDERLY_ACCOUNT_ID= # if integrating with Tenderly, provide an account ID (optional)
+TENDERLY_PROJECT_SLUG= # if integrating with Tenderly, provide a project slug (optional)
+```
+
 Below is an example of how to fully utilize zDC with all its functionality
 by creating and executing a Campaign with all its entities.
 1. Create individual DeployMissions for every contract you have by inheriting the `BaseDeployMission` class
 and overriding required properties and possibly some methods related to your contract.
 ```typescript
-export class CoolContractDM <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  P extends IProviderBase,
-  St extends IContractState,
-> extends BaseDeployMission<H, S, P, St> {
-  proxyData = { // required to be overriden !
+export class CoolContractDM extends BaseDeployMission<
+  HardhatRuntimeEnvironment,
+  YourSignerType,
+  YourProviderType,
+  // an interface of all your contract instance names mapped
+  // to their Typechain classes
+  // the Campaign's `state.contracts` will represent an object
+  // where each of your deployed contracts is returned as a callable
+  // Contract with methods from Typechain
+  {
+    coolContract: CoolContract,
+    anotherContract: AnotherContract,
+    oneMoreContract: OneMoreContract,
+  }
+> {
+  proxyData = { // required to be implemented !
     isProxy: true,
     kind: ProxyKinds.uups,
   };
 
-  contractName = "CoolContract"; // as in .sol file, required to be overriden !
-  instanceName = "coolContract"; // to access it from campaign state, required to be overriden !
+  contractName = "CoolContract"; // as in .sol file, required to be implemented !
+  instanceName = "coolContract"; // to access it from campaign state, required to be implemented !
 
   // which args are required to deploy (for CoolContract.init()
   // or CoolContract.constructor())
@@ -131,7 +159,7 @@ export class CoolContractDM <
     return !isLinked;
   }
 
-  // what to do if `needsPostDeploy` returns true
+  // what to do if `needsPostDeploy` returns `true`
   // override only if needed, is not run by default !
   async postDeploy () {
     const {
@@ -172,8 +200,8 @@ const dbAdapter = await getMongoAdapter();
 
 const campaign = new DeployCampaign<
   HardhatRuntimeEnvironment,
-  SignerWithAddress,
-  DefenderRelayProvider,
+  YourSignerType,
+  YourProviderType,
   // an interface of all your contract instance names mapped
   // to their Typechain classes
   // the Campaign's `state.contracts` will represent an object
