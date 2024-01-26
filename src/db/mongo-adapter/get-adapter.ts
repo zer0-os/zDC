@@ -10,7 +10,13 @@ export const resetMongoAdapter = () => {
 };
 
 
-export const getMongoAdapter = async (logger ?: TLogger) : Promise<MongoDBAdapter> => {
+export const getMongoAdapter = async ({
+  logger,
+  contractsVersion,
+} : {
+  logger ?: TLogger;
+  contractsVersion ?: string;
+} = {}) : Promise<MongoDBAdapter> => {
   const checkParams = {
     dbUri: process.env.MONGO_DB_URI
       ? process.env.MONGO_DB_URI
@@ -31,6 +37,7 @@ export const getMongoAdapter = async (logger ?: TLogger) : Promise<MongoDBAdapte
       ? process.env.MONGO_DB_VERSION
       : undefined,
     archive: process.env.ARCHIVE_PREVIOUS_DB_VERSION === "true",
+    contractsVersion,
   };
 
   let createNew = false;
