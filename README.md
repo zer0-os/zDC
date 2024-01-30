@@ -77,6 +77,11 @@ Uses ENV variables to detemine levels and silencing.
 
 ## Usage
 
+### Installation
+```bash
+yarn add -d "@zero-tech/zdc"
+```
+
 ### Environment Variables
 Set these in the module where you imported this library.
 ```dotenv
