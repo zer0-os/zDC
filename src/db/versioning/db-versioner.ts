@@ -26,6 +26,7 @@ export class DBVersioner {
       this.contractsVersion = contractsVersion;
     }
 
+    // TODO: remove this if no reason to use
     this.curDbVersion = dbVersion || "0";
     this.archiveCurrentDeployed = !!archive;
     this.logger = logger;
