@@ -79,7 +79,7 @@ Uses ENV variables to detemine levels and silencing.
 
 ### Installation
 ```bash
-yarn add -d "@zero-tech/zdc"
+yarn add "@zero-tech/zdc" --dev
 ```
 
 ### Environment Variables
