@@ -140,6 +140,5 @@ export class DeployCampaign <
       this.logger.error(e.message);
       this.logger.debug("Continuing...");
     }
-
   }
 }
