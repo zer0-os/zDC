@@ -17,7 +17,8 @@
   "scripts": {
     "build": "tsc",
     "prepare": "yarn build",
-    "lint": "yarn eslint ./src/** --ext .ts"
+    "lint": "yarn eslint ./src/** --ext .ts",
+    "test": "mocha --require ts-node/register ./test/cases/*.ts"
   },
   "pre-commit": [
     "lint"
@@ -28,9 +29,11 @@
     "winston": "^3.11.0"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.6",
     "@types/node": "^18.15.11",
     "@zero-tech/eslint-config-cpt": "0.2.7",
     "eslint": "^8.56.0",
+    "mocha": "^10.2.0",
     "ts-node": "10.9.1",
     "typescript": "^5.0.2"
   }
