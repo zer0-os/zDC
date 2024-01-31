@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment, max-classes-per-file */
 import {
   BaseDeployMission,
   IContractState, IDeployMissionArgs,
@@ -10,7 +10,7 @@ import {
 } from "../../src";
 import { IExecutedCall } from "./hardhat";
 
-// @ts-ignore
+
 export const makeTestMissionProxy = (mission : any) => new Proxy(mission, {
   get: (target, prop) => {
     if (typeof target[prop] === "function") {
@@ -27,7 +27,7 @@ export abstract class ATestDeployMission<
   P extends IProviderBase,
   St extends IContractState,
 > extends BaseDeployMission<H, S, P, St> {
-  called : Array<IExecutedCall> = [];
+  called : Array<IExecutedCall | string> = [];
 }
 
 export const makeMissionMock = <

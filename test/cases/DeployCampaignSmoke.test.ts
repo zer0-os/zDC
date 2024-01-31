@@ -17,9 +17,11 @@ describe("Deploy Campaign Smoke Test", () => {
   let campaign : DeployCampaign<IHardhatBase, ISignerBase, IProviderBase, IContractState>;
   let missionIdentifiers : Array<string>;
   let hardhatMock : HardhatMock;
+  let config : any;
+  let loggerMessages : Array<string>;
 
   before(async () => {
-    const config = {
+    config = {
       env: "prod",
       deployAdmin: {
         address: "0xdeployAdminAddress",
@@ -32,12 +34,16 @@ describe("Deploy Campaign Smoke Test", () => {
       },
     };
 
+    loggerMessages = [];
+
     const loggerMock = {
-      info: () => {},
+      info: (msg : string) => {
+        loggerMessages.push(msg);
+      },
       error: () => {},
       debug: () => {},
       log: () => {},
-    } as TLogger;
+    } as unknown as TLogger;
 
     hardhatMock = new HardhatMock();
 
@@ -234,5 +240,31 @@ describe("Deploy Campaign Smoke Test", () => {
         ({ methodName, args }) =>
           methodName === "deployProxy" && args.contractName === `Contract${missionIdentifiers[2]}`
       ).length === 1;
+  });
+
+  it("should launch verification and monitoring logic if flags are turned on in the config", async () => {
+    assert.equal(config.postDeploy.verifyContracts, true);
+    assert.equal(config.postDeploy.monitorContracts, true);
+
+    const state = campaign.state.instances as Record<
+    string,
+    ATestDeployMission<HardhatMock, ISignerBase, IProviderBase, IContractState>
+    >;
+
+    // make sure verify() and getMonitoringData() are called on all missions
+    missionIdentifiers.forEach(
+      id => {
+        assert.equal(state[id].called.filter(
+          methodName => methodName === "verify"
+        ).length, 1);
+
+        assert.equal(state[id].called.filter(
+          methodName => methodName === "getMonitoringData"
+        ).length, 1);
+      }
+    );
+
+    // it will not push for test, but this messages indicates that a method has been called
+    loggerMessages.includes("Pushing contracts to Tenderly...");
   });
 });
