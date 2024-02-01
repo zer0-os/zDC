@@ -1,4 +1,4 @@
-import { Collection, Db, MongoClient } from "mongodb";
+import { Collection, Db, MongoClient, MongoClientOptions } from "mongodb";
 import { TLogger } from "../../campaign/types";
 import { IMongoDBAdapterArgs } from "./types";
 import { COLL_NAMES } from "./constants";
@@ -26,12 +26,13 @@ export class MongoDBAdapter {
     dbName,
     clientOpts,
     versionerClass = DBVersioner,
+    mongoClientClass = MongoClient,
     dbVersion,
     contractsVersion,
     archive,
   } : IMongoDBAdapterArgs) {
     this.logger = logger;
-    this.client = new MongoClient(dbUri, clientOpts);
+    this.client = new mongoClientClass(dbUri, clientOpts as MongoClientOptions);
     this.dbUri = dbUri;
     this.dbName = dbName;
 
