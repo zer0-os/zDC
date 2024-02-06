@@ -36,7 +36,19 @@ export class BaseDeployMission <
     this.config = config;
   }
 
-  async getFromDB () {
+  async getLatestFromDB () {
+    // ! Only one "DEPLOYED" version should exist in the DB at any time !
+    const deployedVersionDoc = await this.campaign.dbAdapter.versioner.getDeployedVersion();
+    if (!deployedVersionDoc) {
+      // TODO upg: will this be logged by a logger or should we add logger call asl well? test!
+      // eslint-disable-next-line max-len
+      throw new Error("No deployed version found in DB. This method should be run in upgrade mode only, and the 'DEPLOYED' DB version should exist already from the previous deploy.");
+    }
+
+    return this.campaign.dbAdapter.getContract(this.contractName, deployedVersionDoc.dbVersion);
+  }
+
+  async getDeployedFromDB () {
     return this.campaign.dbAdapter.getContract(this.contractName);
   }
 
@@ -53,7 +65,7 @@ export class BaseDeployMission <
   }
 
   async needsDeploy () {
-    const dbContract = await this.getFromDB();
+    const dbContract = await this.getLatestFromDB();
 
     if (!dbContract) {
       this.logger.info(`${this.contractName} not found in DB, proceeding to deploy...`);
