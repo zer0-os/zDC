@@ -110,11 +110,7 @@ export class MongoDBAdapter {
   }
 
   async clearDBForVersion (version : string) {
-    await this.contracts.deleteMany({
-      version,
-    });
-
-    return this.versioner.clearDBForVersion(version);
+    return this.versioner.clearDBForVersion(version, this.db);
   }
 
   async finalize (version ?: string) {
