@@ -36,7 +36,7 @@ export class BaseDeployMission <
     this.config = config;
   }
 
-  async getLatestFromDB () {
+  async getDeployedFromDB () {
     // ! Only one "DEPLOYED" version should exist in the DB at any time !
     const deployedVersionDoc = await this.campaign.dbAdapter.versioner.getDeployedVersion();
     if (!deployedVersionDoc) {
@@ -48,7 +48,7 @@ export class BaseDeployMission <
     return this.campaign.dbAdapter.getContract(this.contractName, deployedVersionDoc.dbVersion);
   }
 
-  async getDeployedFromDB () {
+  async getLatestFromDB () {
     return this.campaign.dbAdapter.getContract(this.contractName);
   }
 
@@ -65,7 +65,7 @@ export class BaseDeployMission <
   }
 
   async needsDeploy () {
-    const dbContract = await this.getLatestFromDB();
+    const dbContract = await this.getDeployedFromDB();
 
     if (!dbContract) {
       this.logger.info(`${this.contractName} not found in DB, proceeding to deploy...`);
