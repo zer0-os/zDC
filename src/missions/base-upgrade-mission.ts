@@ -1,6 +1,8 @@
 import { BaseDeployMission } from "./base-deploy-mission";
 import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer";
 import { IContractState } from "../campaign";
+import { UpgradeOps } from "./constants";
+import { IContractDbData } from "../db";
 
 
 export class BaseUpgradeMission <
@@ -9,14 +11,14 @@ export class BaseUpgradeMission <
   P extends IProviderBase,
   St extends IContractState,
 > extends BaseDeployMission<H, S, P, St> {
-  async stateOfDeployment () {
-    const newContract = await this.getLatestFromDB();
-    const deployedContract = await this.getDeployedFromDB();
+  async getUpgradeOperation () {
+    const newContract = await this.getDeployedFromDB();
+    const deployedContract = await this.getLatestFromDB();
 
     // checking this first to know if this contract has been deployed previously
     // if not - we just deploy the new one
     if (!deployedContract) {
-      return "deployNew";
+      return UpgradeOps.deploy;
     }
 
     // if deployedContract exists, but newContract does not,
@@ -27,20 +29,27 @@ export class BaseUpgradeMission <
 
       // the same - just copy DB data over to the new version
       if (sameCode) {
-        return "copyToNewDB";
+        return UpgradeOps.copy;
       // different - we need to upgrade
       } else {
-        return "upgrade";
+        return UpgradeOps.upgrade;
       }
-    // if both of them exist and their addresses are the same (proxies),
-    // we don't need to do anything
     }
 
+    // if both of them exist and their addresses are the same (proxies),
+    // we don't do anything
     if (newContract.address === deployedContract.address) {
-      return "noChange";
+      return UpgradeOps.keep;
     } else {
       throw new Error("Unknown state of deployment.");
     }
+  }
+
+  async dbCopy () {
+    const deployedContract = await this.getDeployedFromDB();
+    delete deployedContract?.version;
+    await this.campaign.dbAdapter.writeContract(this.contractName, (deployedContract as IContractDbData));
+    this.logger.debug(`${this.contractName} data is copied to the newest version of the DB...`);
   }
 
   async needsUpgrade () : Promise<boolean> {}
@@ -62,19 +71,19 @@ export class BaseUpgradeMission <
       await super.execute();
     }
 
-    const state = await this.stateOfDeployment();
+    const op = await this.getUpgradeOperation();
 
-    switch (state) {
-    case "deployNew":
+    switch (op) {
+    case UpgradeOps.deploy:
       await super.execute();
       break;
-    case "copyToNewDB":
+    case UpgradeOps.copy:
       await this.dbCopy();
       break;
-    case "upgrade":
+    case UpgradeOps.upgrade:
       await this.upgrade();
       break;
-    case "noChange":
+    case UpgradeOps.keep:
       break;
     default:
       throw new Error("Unknown state of deployment.");
