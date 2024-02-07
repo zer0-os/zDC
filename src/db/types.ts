@@ -7,7 +7,7 @@ export interface IContractDbData {
   abi : string;
   bytecode : string;
   implementation : string | null;
-  version : string;
+  version ?: string;
 }
 
 export type TContractDBDoc = WithId<IContractDbData> & IContractDbData;
