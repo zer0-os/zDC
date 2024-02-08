@@ -21,20 +21,18 @@ export class BaseUpgradeMission <
       return UpgradeOps.deploy;
     }
 
-    // if deployedContract exists, but newContract does not,
+    // if deployedContract is in DB, but newContract is not in DB yet
     // we need to compare them
     if (!newContract) {
-      // check if the current compiled contract is the same as the one deployed
-      // TODO upg: do we need this if OZ-upgrades already checks the bytecode ?
-      const sameCode = compareBytecode();
+      // TODO upg: MAKE SURE THIS WORKS PROPERLY IN THE UPGRADES PACKAGE
+      //  AND THE CONTRACT IS NOT DEPLOYED IN THE UPGRADE FLOW IF BYTECODES ARE THE SAME !!!
+      //  IF IT DOESN'T, WE NEED OUR OWN WAY TO COMPARE BYTECODES
+      return UpgradeOps.upgrade;
 
-      // the same - just copy DB data over to the new version
-      if (sameCode) {
-        return UpgradeOps.copy;
-      // different - we need to upgrade
-      } else {
-        return UpgradeOps.upgrade;
-      }
+      // TODO upg: possibly add a check for the RedeployImplementationOpt set for each mission
+      //  as a prop akin to `proxyData`
+      //  some contracts never need to be redeployed, some may always need redeploy and most are `onchange`
+      //  this can be set by default in this mission and overriden by child missions
     }
 
     // if both of them exist and their addresses are the same (proxies),
@@ -46,6 +44,7 @@ export class BaseUpgradeMission <
     }
   }
 
+  // TODO upg: this is currently NOT used. remove it if it's not needed
   async dbCopy () {
     const deployedContract = await this.getDeployedFromDB();
     delete deployedContract?.version;
