@@ -25,6 +25,7 @@ export class BaseUpgradeMission <
     // we need to compare them
     if (!newContract) {
       // check if the current compiled contract is the same as the one deployed
+      // TODO upg: do we need this if OZ-upgrades already checks the bytecode ?
       const sameCode = compareBytecode();
 
       // the same - just copy DB data over to the new version
@@ -52,18 +53,44 @@ export class BaseUpgradeMission <
     this.logger.debug(`${this.contractName} data is copied to the newest version of the DB...`);
   }
 
-  async needsUpgrade () : Promise<boolean> {}
+  async upgrade () {
+    this.logger.info(`Upgrading ${this.contractName}...`);
 
-  async upgrade () : Promise<void> {
-    throw new Error("Not implemented");
+    if (!this.proxyData.isProxy) {
+      // eslint-disable-next-line max-len
+      throw new Error(`${this.contractName} is not a proxy contract. Cannot upgrade. Check 'proxyData' field in your specific mission class.`);
+    }
+
+    const deployedContract = await this.getDeployedFromDB();
+
+    if (!deployedContract) {
+      // eslint-disable-next-line max-len
+      throw new Error(`No deployed contract with the name ${this.contractName} found in DB. This may signify an error or a bug on the previous stages of the upgrade flow.`);
+    }
+
+    const contract = await this.campaign.deployer.upgradeProxy(
+      this.contractName,
+      deployedContract.address,
+      // TODO upg: add the ability to pass upgrade options
+      {
+        kind: this.proxyData.kind,
+      }
+    );
+
+    await this.saveToDB(contract);
+
+    this.campaign.updateStateContract(this.instanceName, this.contractName, contract);
+
+    // eslint-disable-next-line max-len
+    this.logger.info(`Successfully upgraded ${this.contractName} contract to the newest version at ${await contract.getAddress()}`);
   }
 
   async needsPostUpgrade () : Promise<boolean> {
-    throw new Error("Not implemented");
+    return Promise.resolve(false);
   }
 
   async postUpgrade () : Promise<void> {
-    throw new Error("Not implemented");
+    return Promise.resolve();
   }
 
   async execute () {
@@ -82,11 +109,16 @@ export class BaseUpgradeMission <
       break;
     case UpgradeOps.upgrade:
       await this.upgrade();
+
+      if (await this.needsPostUpgrade()) {
+        await this.postUpgrade();
+      }
       break;
     case UpgradeOps.keep:
+      // TODO upg: do we need any logic here ?
       break;
     default:
-      throw new Error("Unknown state of deployment.");
+      throw new Error(`Deploy operation ${op} is not supported.`);
     }
   }
 }

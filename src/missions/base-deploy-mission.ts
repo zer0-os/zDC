@@ -40,7 +40,7 @@ export class BaseDeployMission <
     // ! Only one "DEPLOYED" version should exist in the DB at any time !
     const deployedVersionDoc = await this.campaign.dbAdapter.versioner.getDeployedVersion();
     if (!deployedVersionDoc) {
-      // TODO upg: will this be logged by a logger or should we add logger call asl well? test!
+      // TODO upg: will this be logged by a logger or should we add logger call as well? test!
       // eslint-disable-next-line max-len
       throw new Error("No deployed version found in DB. This method should be run in upgrade mode only, and the 'DEPLOYED' DB version should exist already from the previous deploy.");
     }
