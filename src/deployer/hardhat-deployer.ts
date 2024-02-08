@@ -1,7 +1,14 @@
 import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
 import axios from "axios";
 import { IContractV6 } from "../campaign/types";
-import { IHardhatBase, ISignerBase, IProviderBase, IHardhatDeployerArgs, IUpgradeOpts } from "./types";
+import {
+  IHardhatBase,
+  ISignerBase,
+  IProviderBase,
+  IHardhatDeployerArgs,
+  IUpgradeOpts,
+  IContractFactoryBase,
+} from "./types";
 
 
 export class HardhatDeployer <
@@ -51,36 +58,14 @@ export class HardhatDeployer <
       kind,
     });
 
-    // TODO upg: extract this into a separate method to not copy for 3 methods here
-    //  if the same logic is used for upgradeProxy()
-    let receipt;
-    if (!this.provider) {
-      return deployment.waitForDeployment();
-    } else {
-      const tx = deployment.deploymentTransaction();
-      // TODO upg: refactor all the usages of this to check the existence of the `tx` object
-      //  if null - throw an error
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
-
-      return contractFactory.attach(receipt.contractAddress);
-    }
+    return this.awaitDeployment(contractName, deployment, contractFactory);
   }
 
   async deployContract (contractName : string, args : TDeployArgs) : Promise<IContractV6> {
     const contractFactory = await this.getFactory(contractName);
     const deployment = await contractFactory.deploy(...args);
 
-    let receipt;
-    if (!this.provider) {
-      return deployment.waitForDeployment();
-    } else {
-      const tx = deployment.deploymentTransaction();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
-
-      return contractFactory.attach(receipt.contractAddress);
-    }
+    return this.awaitDeployment(contractName, deployment, contractFactory);
   }
 
   async upgradeProxy (
@@ -96,17 +81,28 @@ export class HardhatDeployer <
       upgradeOpts,
     );
 
-    let receipt;
-    if (!this.provider) {
-      // TODO upg: are below the correct methods to do this?
-      return deployment.waitForDeployment();
-    } else {
-      const tx = deployment.deploymentTransaction();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
+    // TODO upg: is this going to be the same flow for upgrade as for deploy?
+    return this.awaitDeployment(contractName, deployment, contractFactory);
+  }
 
-      return contractFactory.attach(receipt.contractAddress);
+  async awaitDeployment (
+    contractName : string,
+    deployment : IContractV6,
+    factory : IContractFactoryBase,
+  ) {
+    if (!this.provider) {
+      return deployment.waitForDeployment();
     }
+
+    const tx = deployment.deploymentTransaction();
+
+    if (!tx) {
+      throw new Error(`No deployment transaction returned for ${contractName}!`);
+    }
+
+    const receipt = await this.provider.waitForTransaction(tx.hash, 3);
+
+    return factory.attach(receipt.contractAddress);
   }
 
   getContractArtifact (contractName : string) {
