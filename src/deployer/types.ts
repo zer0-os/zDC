@@ -51,6 +51,30 @@ export type TGetFactoryArgs<
   signerOrOptions ?: S | O,
 ];
 
+export type TRedeployImplementationOpt = "always" | "never" | "onchange";
+
+export interface IRedeployImplementationOpts {
+  always : TRedeployImplementationOpt;
+  never : TRedeployImplementationOpt;
+  onchange : TRedeployImplementationOpt;
+}
+
+export interface IDeployOpts {
+  unsafeAllow ?: Array<unknown>;
+  unsafeAllowRenames ?: boolean;
+  unsafeSkipStorageCheck ?: boolean;
+  constructorArgs ?: Array<unknown>;
+  timeout ?: number;
+  pollingInterval ?: number;
+  redeployImplementation ?: TRedeployImplementationOpt;
+  txOverrides ?: unknown;
+  kind ?: Omit<TProxyKind, "beacon">;
+}
+
+export interface IUpgradeOpts extends IDeployOpts {
+  call ?: string | { fn : string; args ?: Array<unknown>; };
+}
+
 export interface IHardhatBase {
   run : (
     taskIdentifier : string | { scope ?: string; task : string; },
@@ -59,6 +83,7 @@ export interface IHardhatBase {
   ) => Promise<void>;
   ethers : {
     getContractFactory : <
+      // TODO upg: can we change all these base types to the ones from Ethers?
       F extends IContractFactoryBase,
       S extends ISignerBase,
       O extends IFactoryOpts,
@@ -73,11 +98,16 @@ export interface IHardhatBase {
     deployProxy : <F extends IContractFactoryBase> (
       factory : F,
       args : TDeployArgs,
-      options : { kind : TProxyKind; }
+      options : IDeployOpts,
     ) => Promise<IContractV6>;
     erc1967 : {
       getImplementationAddress : (address : string) => Promise<string>;
     };
+    upgradeProxy : <F extends IContractFactoryBase> (
+      proxy : string | IContractV6,
+      Contract : F,
+      opts : IUpgradeOpts,
+    ) => Promise<IContractV6>;
   };
   artifacts : {
     readArtifactSync : (contractName : string) => IContractArtifact;
