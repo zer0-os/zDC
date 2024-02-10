@@ -1,16 +1,12 @@
 import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
 import axios from "axios";
 import { IContractV6 } from "../campaign/types";
-import { IHardhatBase, ISignerBase, IProviderBase, IHardhatDeployerArgs } from "./types";
+import { IProviderBase, IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
 
 
-export class HardhatDeployer <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  P extends IProviderBase,
-> {
-  hre : H;
-  signer : S;
+export class HardhatDeployer <P extends IProviderBase> {
+  hre : HardhatExtended;
+  signer : TSigner;
   env : string;
   provider ?: P;
 
@@ -19,14 +15,14 @@ export class HardhatDeployer <
     signer,
     env,
     provider,
-  } : IHardhatDeployerArgs<H, S, P>) {
+  } : IHardhatDeployerArgs<P>) {
     this.hre = hre;
     this.signer = signer;
     this.env = env;
     this.provider = provider;
   }
 
-  async getFactory (contractName : string, signer ?: S) {
+  async getFactory (contractName : string, signer ?: TSigner) {
     const attachedSigner = signer ?? this.signer;
     return this.hre.ethers.getContractFactory(contractName, attachedSigner);
   }
@@ -59,7 +55,7 @@ export class HardhatDeployer <
     } else {
       const tx = await deployment.deploymentTransaction();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
+      receipt = await this.provider.waitForTransaction(tx.hash, 3);
 
       return contractFactory.attach(receipt.contractAddress);
     }
@@ -77,7 +73,7 @@ export class HardhatDeployer <
     } else {
       const tx = await deployment.deploymentTransaction();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
+      receipt = await this.provider.waitForTransaction(tx.hash, 3);
 
       return contractFactory.attach(receipt.contractAddress);
     }

@@ -1,6 +1,16 @@
 import { IContractV6 } from "../campaign/types";
 import { TDeployArgs, TProxyKind } from "../missions/types";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { HardhatEthersHelpers } from "@nomicfoundation/hardhat-ethers/types";
+import { DefenderHardhatUpgrades, HardhatUpgrades } from "@openzeppelin/hardhat-upgrades";
 
+export interface HardhatExtensions {
+  ethers : HardhatEthersHelpers;
+  upgrades : HardhatUpgrades | DefenderHardhatUpgrades;
+}
+
+export type HardhatExtended = HardhatRuntimeEnvironment & HardhatExtensions;
 
 export type THHTaskArguments = unknown;
 
@@ -17,6 +27,8 @@ export interface ISignerBase {
   address : string;
   getAddress ?: () => Promise<string>;
 }
+
+export type TSigner = SignerWithAddress;
 
 export interface ITxReceiptBase {
   contractAddress : string;
@@ -51,6 +63,7 @@ export type TGetFactoryArgs<
   signerOrOptions ?: S | O,
 ];
 
+// TODO upg: remove all unnecesary types!
 export interface IHardhatBase {
   run : (
     taskIdentifier : string | { scope ?: string; task : string; },
@@ -85,12 +98,10 @@ export interface IHardhatBase {
 }
 
 export interface IHardhatDeployerArgs<
-  H extends IHardhatBase,
-  S extends ISignerBase,
   P extends IProviderBase,
 > {
-  hre : H;
-  signer : S;
+  hre : HardhatExtended;
+  signer : TSigner;
   env : string;
   provider ?: P;
 }
