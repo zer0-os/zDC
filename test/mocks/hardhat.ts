@@ -2,7 +2,7 @@
 import {
   IContractArtifact,
   IContractFactoryBase,
-  IHardhatBase, IHHSubtaskArguments, ISignerBase,
+  IHHSubtaskArguments,
   TDeployArgs,
   THHTaskArguments,
   TProxyKind,
@@ -32,7 +32,7 @@ export interface IExecutedCall {
   args ?: any;
 }
 
-export class HardhatMock implements IHardhatBase {
+export class HardhatMock {
   called : Array<IExecutedCall> = [];
 
   ethers = {

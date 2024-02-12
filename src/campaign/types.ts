@@ -3,8 +3,7 @@ import { TDeployMissionCtor } from "../missions/types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { IProviderBase, TSigner } from "../deployer/types";
 import { Contract } from "ethers";
 
 
@@ -21,7 +20,7 @@ export type TCampaignDataType = bigint
   | object;
 
 export interface IBaseDataMap {
-  [key : string] : TCampaignDataType | SignerWithAddress;
+  [key : string] : TCampaignDataType | TSigner;
 }
 
 export interface IAddressable {
@@ -63,7 +62,7 @@ export interface ICampaignArgs <
 
 export interface IDeployCampaignConfig extends IBaseDataMap {
   env : string;
-  deployAdmin : SignerWithAddress;
+  deployAdmin : TSigner;
   postDeploy : {
     tenderlyProjectSlug : string;
     monitorContracts : boolean;

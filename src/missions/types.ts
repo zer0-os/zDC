@@ -1,7 +1,7 @@
 import { BaseDeployMission } from "./base-deploy-mission";
 import { DeployCampaign } from "../campaign/deploy-campaign";
 import { IContractState, IDeployCampaignConfig, TCampaignDataType, TLogger } from "../campaign/types";
-import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
+import { IProviderBase } from "../deployer/types";
 
 
 export interface IDeployMissionArgs <
