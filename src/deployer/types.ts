@@ -1,9 +1,10 @@
-import { IContractV6 } from "../campaign/types";
 import { TDeployArgs, TProxyKind } from "../missions/types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { HardhatEthersHelpers } from "@nomicfoundation/hardhat-ethers/types";
 import { DefenderHardhatUpgrades, HardhatUpgrades } from "@openzeppelin/hardhat-upgrades";
+import { Contract } from "ethers";
+
 
 export interface HardhatExtensions {
   ethers : HardhatEthersHelpers;
@@ -19,8 +20,8 @@ export interface IHHSubtaskArguments {
 }
 
 export interface IContractFactoryBase {
-  deploy : (...args : TDeployArgs) => Promise<IContractV6>;
-  attach : (address : string) => IContractV6;
+  deploy : (...args : TDeployArgs) => Promise<Contract>;
+  attach : (address : string) => Contract;
 }
 
 export interface ISignerBase {
@@ -87,7 +88,7 @@ export interface IHardhatBase {
       factory : F,
       args : TDeployArgs,
       options : { kind : TProxyKind; }
-    ) => Promise<IContractV6>;
+    ) => Promise<Contract>;
     erc1967 : {
       getImplementationAddress : (address : string) => Promise<string>;
     };

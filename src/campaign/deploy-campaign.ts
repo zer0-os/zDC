@@ -3,27 +3,26 @@ import {
   ICampaignState,
   TLogger,
   IMissionInstances,
-  IContractV6, IDeployCampaignConfig, IContractState,
+  IDeployCampaignConfig, IContractState,
 } from "./types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { ITenderlyContractData, TDeployMissionCtor } from "../missions/types";
 import { BaseDeployMission } from "../missions/base-deploy-mission";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
+import { IProviderBase } from "../deployer/types";
 import { makeCampaignProxy } from "./proxy";
+import { Contract } from "ethers";
 
 
 export class DeployCampaign <
-  H extends IHardhatBase,
-  S extends ISignerBase,
   P extends IProviderBase,
-  St extends IContractState<IContractV6>,
+  St extends IContractState<Contract>,
 > {
-  state : ICampaignState<H, S, P, St>;
+  state : ICampaignState<P, St>;
   deployer : HardhatDeployer<P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
-  config : IDeployCampaignConfig<S>;
+  config : IDeployCampaignConfig;
 
   // TODO dep: improve typing here so that methods of each contract type are resolved in Mission classes!
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,7 +34,7 @@ export class DeployCampaign <
     dbAdapter,
     logger,
     config,
-  } : ICampaignArgs<H, S, P, St>) {
+  } : ICampaignArgs<P, St>) {
     this.state = {
       missions,
       instances: {},
@@ -50,7 +49,7 @@ export class DeployCampaign <
 
     // instantiate all missions
     this.state.instances = missions.reduce(
-      (acc : IMissionInstances<H, S, P, St>, mission : TDeployMissionCtor<H, S, P, St>) => {
+      (acc : IMissionInstances<P, St>, mission : TDeployMissionCtor<P, St>) => {
         const instance = new mission({
           campaign: campaignProxy,
           logger,
@@ -74,7 +73,7 @@ export class DeployCampaign <
     await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<H, S, P, St>,
+        missionInstance : BaseDeployMission<P, St>,
       ) : Promise<void> => {
         await acc;
         return missionInstance.execute();
@@ -93,7 +92,7 @@ export class DeployCampaign <
     this.logger.info("Deploy Campaign execution finished successfully.");
   }
 
-  updateStateContract (instanceName : string, contractName : string, contract : IContractV6) {
+  updateStateContract (instanceName : string, contractName : string, contract : Contract) {
     // TODO: can we improve this?
     (this.state.contracts as IContractState)[instanceName] = contract;
     this.logger.debug(`Data of deployed contract '${contractName}' is added to Campaign state at '${instanceName}'.`);
@@ -103,7 +102,7 @@ export class DeployCampaign <
     return Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<H, S, P, St>,
+        missionInstance : BaseDeployMission<P, St>,
       ) => {
         await acc;
         return missionInstance.verify();
@@ -118,7 +117,7 @@ export class DeployCampaign <
     const contracts = await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<Array<ITenderlyContractData>>,
-        missionInstance : BaseDeployMission<H, S, P, St>,
+        missionInstance : BaseDeployMission<P, St>,
       ) : Promise<Array<ITenderlyContractData>> => {
         const newAcc = await acc;
         const data = await missionInstance.getMonitoringData();

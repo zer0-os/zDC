@@ -1,6 +1,5 @@
 import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
 import axios from "axios";
-import { IContractV6 } from "../campaign/types";
 import { IProviderBase, IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
 import { Contract } from "ethers";
 
@@ -63,7 +62,7 @@ export class HardhatDeployer <P extends IProviderBase> {
     }
   }
 
-  async deployContract (contractName : string, args : TDeployArgs) : Promise<IContractV6> {
+  async deployContract (contractName : string, args : TDeployArgs) : Promise<Contract> {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const contractFactory = await this.getFactory(contractName);

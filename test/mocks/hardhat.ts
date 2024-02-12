@@ -2,12 +2,12 @@
 import {
   IContractArtifact,
   IContractFactoryBase,
-  IContractV6,
   IHardhatBase, IHHSubtaskArguments, ISignerBase,
   TDeployArgs,
   THHTaskArguments,
   TProxyKind,
 } from "../../src";
+import { Contract } from "ethers";
 
 
 const contractMock = {
@@ -18,7 +18,7 @@ const contractMock = {
     hash: "0xhash",
   }),
   interface: {},
-} as IContractV6;
+} as Contract;
 
 export const contractFactoryMock = {
   deploy: async () => Promise.resolve(contractMock),
@@ -54,13 +54,13 @@ export class HardhatMock implements IHardhatBase {
       factory : any,
       args : TDeployArgs,
       options : { kind : TProxyKind; }
-    ) : Promise<IContractV6> => {
+    ) : Promise<Contract> => {
       this.called.push({
         methodName: "deployProxy",
         args: { contractName: factory.contractName, args, kind: options.kind },
       });
 
-      return contractMock as unknown as Promise<IContractV6>;
+      return contractMock as unknown as Promise<Contract>;
     },
     erc1967: {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
