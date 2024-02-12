@@ -20,7 +20,7 @@ export class DeployCampaign <
   St extends IContractState<IContractV6>,
 > {
   state : ICampaignState<H, S, P, St>;
-  deployer : HardhatDeployer<H, S, P>;
+  deployer : HardhatDeployer<P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
   config : IDeployCampaignConfig<S>;

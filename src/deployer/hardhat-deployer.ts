@@ -2,8 +2,10 @@ import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/type
 import axios from "axios";
 import { IContractV6 } from "../campaign/types";
 import { IProviderBase, IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
+import { Contract } from "ethers";
 
 
+// TODO upg: try and remove this general provider type if possible
 export class HardhatDeployer <P extends IProviderBase> {
   hre : HardhatExtended;
   signer : TSigner;
@@ -41,7 +43,7 @@ export class HardhatDeployer <P extends IProviderBase> {
     contractName : string;
     args : TDeployArgs;
     kind : TProxyKind;
-  }) : Promise<IContractV6> {
+  }) : Promise<Contract> {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const contractFactory = await this.getFactory(contractName);
@@ -55,7 +57,7 @@ export class HardhatDeployer <P extends IProviderBase> {
     } else {
       const tx = await deployment.deploymentTransaction();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx.hash, 3);
+      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
 
       return contractFactory.attach(receipt.contractAddress);
     }
@@ -73,7 +75,7 @@ export class HardhatDeployer <P extends IProviderBase> {
     } else {
       const tx = await deployment.deploymentTransaction();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx.hash, 3);
+      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
 
       return contractFactory.attach(receipt.contractAddress);
     }
