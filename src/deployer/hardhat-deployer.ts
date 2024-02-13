@@ -1,7 +1,8 @@
-import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
+import { ITenderlyContractData, TDeployArgs } from "../missions/types";
 import axios from "axios";
-import { IProviderBase, IHardhatDeployerArgs, TSigner, HardhatExtended, IUpgradeOpts } from "./types";
-import { Contract } from "ethers";
+import { IProviderBase, IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
+import { Contract, ContractFactory } from "ethers";
+import { UpgradeProxyOptions } from "@openzeppelin/hardhat-upgrades/dist/utils";
 
 
 // TODO upg: try and remove this general provider type if possible
@@ -37,16 +38,14 @@ export class HardhatDeployer <P extends IProviderBase> {
   async deployProxy ({
     contractName,
     args,
-    kind,
+    opts,
   } : {
     contractName : string;
     args : TDeployArgs;
-    kind : TProxyKind;
+    opts : UpgradeProxyOptions;
   }) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
-    const deployment = await this.hre.upgrades.deployProxy(contractFactory, args, {
-      kind,
-    });
+    const deployment = await this.hre.upgrades.deployProxy(contractFactory, args, opts);
 
     return this.awaitDeployment(contractName, deployment, contractFactory);
   }
@@ -61,7 +60,7 @@ export class HardhatDeployer <P extends IProviderBase> {
   async upgradeProxy (
     contractName : string,
     contractAddress : string,
-    upgradeOpts : IUpgradeOpts,
+    upgradeOpts : UpgradeProxyOptions,
   ) {
     const contractFactory = await this.getFactory(contractName);
 
@@ -77,9 +76,9 @@ export class HardhatDeployer <P extends IProviderBase> {
 
   async awaitDeployment (
     contractName : string,
-    deployment : IContractV6,
-    factory : IContractFactoryBase,
-  ) {
+    deployment : Contract,
+    factory : ContractFactory,
+  ) : Promise<Contract> {
     if (!this.provider) {
       return deployment.waitForDeployment();
     }
@@ -92,7 +91,7 @@ export class HardhatDeployer <P extends IProviderBase> {
 
     const receipt = await this.provider.waitForTransaction(tx.hash, 3);
 
-    return factory.attach(receipt.contractAddress);
+    return factory.attach(receipt.contractAddress) as Contract;
   }
 
   getContractArtifact (contractName : string) {

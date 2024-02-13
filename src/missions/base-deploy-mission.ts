@@ -116,7 +116,7 @@ export class BaseDeployMission <
       contract = await this.campaign.deployer.deployProxy({
         contractName: this.contractName,
         args: deployArgs,
-        kind: this.proxyData.kind,
+        opts: { kind: this.proxyData.kind },
       });
     } else {
       contract = await this.campaign.deployer.deployContract(this.contractName, deployArgs);

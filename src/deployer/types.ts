@@ -67,23 +67,6 @@ export interface IRedeployImplementationOpts {
   onchange : TRedeployImplementationOpt;
 }
 
-export interface IDeployOpts {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  unsafeAllow ?: Array<any>;
-  unsafeAllowRenames ?: boolean;
-  unsafeSkipStorageCheck ?: boolean;
-  constructorArgs ?: Array<unknown>;
-  timeout ?: number;
-  pollingInterval ?: number;
-  redeployImplementation ?: TRedeployImplementationOpt;
-  txOverrides ?: any;
-  kind ?: TProxyKind;
-}
-
-export interface IUpgradeOpts extends IDeployOpts {
-  call ?: string | { fn : string; args ?: Array<unknown>; };
-}
-
 export interface IHardhatDeployerArgs<
   P extends IProviderBase,
 > {

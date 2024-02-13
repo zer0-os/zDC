@@ -16,7 +16,7 @@ import { Contract } from "ethers";
 
 export class DeployCampaign <
   P extends IProviderBase,
-  St extends IContractState<Contract>,
+  St extends IContractState,
 > {
   state : ICampaignState<P, St>;
   deployer : HardhatDeployer<P>;

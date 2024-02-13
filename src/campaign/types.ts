@@ -4,7 +4,7 @@ import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
 import { IProviderBase, TSigner } from "../deployer/types";
-import { Contract } from "ethers";
+import { ContractInterface, BaseContract } from "ethers";
 
 
 export interface ITransactionReceipt {
@@ -29,8 +29,10 @@ export interface IAddressable {
 
 export type TLogger = WinstonLogger | Console;
 
-export interface IContractState<C extends Contract = Contract> {
-  [key : string] : C;
+export type TGeneralContract = BaseContract & Omit<ContractInterface, keyof BaseContract>;
+
+export interface IContractState {
+  [name : string] : BaseContract;
 }
 
 export interface IMissionInstances <
@@ -62,6 +64,7 @@ export interface ICampaignArgs <
 
 export interface IDeployCampaignConfig extends IBaseDataMap {
   env : string;
+  upgrade : boolean;
   deployAdmin : TSigner;
   postDeploy : {
     tenderlyProjectSlug : string;
