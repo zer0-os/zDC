@@ -2,8 +2,8 @@
 import {
   IContractArtifact,
   IContractFactoryBase,
-  IContractV6,
-  IHardhatBase, IHHSubtaskArguments, ISignerBase,
+  IContractV6, IDeployOpts,
+  IHardhatBase, IHHSubtaskArguments, ISignerBase, IUpgradeOpts,
   TDeployArgs,
   THHTaskArguments,
   TProxyKind,
@@ -50,10 +50,10 @@ export class HardhatMock implements IHardhatBase {
   };
 
   upgrades = {
-    deployProxy: async (
-      factory : any,
+    deployProxy: async <F extends IContractFactoryBase> (
+      factory : F,
       args : TDeployArgs,
-      options : { kind : TProxyKind; }
+      options : IDeployOpts,
     ) : Promise<IContractV6> => {
       this.called.push({
         methodName: "deployProxy",
@@ -62,6 +62,12 @@ export class HardhatMock implements IHardhatBase {
 
       return contractMock as unknown as Promise<IContractV6>;
     },
+    upgradeProxy: async <F extends IContractFactoryBase> (
+      proxy : string | IContractV6,
+      Contract : F,
+      opts : IUpgradeOpts,
+      // TODO: implement properly for tests
+    ) : Promise<IContractV6> => Promise.resolve(contractMock),
     erc1967: {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       getImplementationAddress: async (address : string) => Promise.resolve("0ximplementationAddress"),

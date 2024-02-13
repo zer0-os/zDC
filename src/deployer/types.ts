@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IContractV6 } from "../campaign/types";
 import { TDeployArgs, TProxyKind } from "../missions/types";
 
@@ -10,7 +11,14 @@ export interface IHHSubtaskArguments {
 
 export interface IContractFactoryBase {
   deploy : (...args : TDeployArgs) => Promise<IContractV6>;
-  attach : (address : string) => IContractV6;
+  // TODO upg: remove all any types possible !
+  attach : (address : string) => any;
+  contractName : string;
+  interface : any;
+  bytecode : string;
+  runner : any;
+  getDeployTransaction : (args : TDeployArgs) => any;
+  connect : (runner : any) => IContractFactoryBase;
 }
 
 export interface ISignerBase {
@@ -60,15 +68,16 @@ export interface IRedeployImplementationOpts {
 }
 
 export interface IDeployOpts {
-  unsafeAllow ?: Array<unknown>;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  unsafeAllow ?: Array<any>;
   unsafeAllowRenames ?: boolean;
   unsafeSkipStorageCheck ?: boolean;
   constructorArgs ?: Array<unknown>;
   timeout ?: number;
   pollingInterval ?: number;
   redeployImplementation ?: TRedeployImplementationOpt;
-  txOverrides ?: unknown;
-  kind ?: Omit<TProxyKind, "beacon">;
+  txOverrides ?: any;
+  kind ?: TProxyKind;
 }
 
 export interface IUpgradeOpts extends IDeployOpts {
@@ -83,7 +92,6 @@ export interface IHardhatBase {
   ) => Promise<void>;
   ethers : {
     getContractFactory : <
-      // TODO upg: can we change all these base types to the ones from Ethers?
       F extends IContractFactoryBase,
       S extends ISignerBase,
       O extends IFactoryOpts,
