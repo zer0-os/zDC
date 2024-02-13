@@ -14,6 +14,12 @@
     "node": ">=18",
     "npm": ">=9"
   },
+  "include": [
+    "dist/**/*.ts",
+    "LICENSE",
+    "package.json",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "prepare": "yarn build",
