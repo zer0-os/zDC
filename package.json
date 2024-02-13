@@ -14,14 +14,9 @@
     "node": ">=18",
     "npm": ">=9"
   },
-  "include": [
-    "dist/**/*.ts",
-    "LICENSE",
-    "package.json",
-    "README.md"
-  ],
   "scripts": {
-    "build": "tsc",
+    "clean": "rm -rf dist",
+    "build": "yarn clean && tsc",
     "prepare": "yarn build",
     "lint": "yarn eslint ./src/** --ext .ts",
     "test": "mocha --require ts-node/register ./test/cases/*.ts"
