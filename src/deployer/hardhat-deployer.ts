@@ -1,23 +1,13 @@
 import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
 import axios from "axios";
-import { IContractV6 } from "../campaign/types";
-import {
-  IHardhatBase,
-  ISignerBase,
-  IProviderBase,
-  IHardhatDeployerArgs,
-  IUpgradeOpts,
-  IContractFactoryBase,
-} from "./types";
+import { IProviderBase, IHardhatDeployerArgs, TSigner, HardhatExtended, IUpgradeOpts } from "./types";
+import { Contract } from "ethers";
 
 
-export class HardhatDeployer <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  P extends IProviderBase,
-> {
-  hre : H;
-  signer : S;
+// TODO upg: try and remove this general provider type if possible
+export class HardhatDeployer <P extends IProviderBase> {
+  hre : HardhatExtended;
+  signer : TSigner;
   env : string;
   provider ?: P;
 
@@ -26,14 +16,14 @@ export class HardhatDeployer <
     signer,
     env,
     provider,
-  } : IHardhatDeployerArgs<H, S, P>) {
+  } : IHardhatDeployerArgs<P>) {
     this.hre = hre;
     this.signer = signer;
     this.env = env;
     this.provider = provider;
   }
 
-  async getFactory (contractName : string, signer ?: S) {
+  async getFactory (contractName : string, signer ?: TSigner) {
     const attachedSigner = signer ?? this.signer;
     return this.hre.ethers.getContractFactory(contractName, attachedSigner);
   }
@@ -52,7 +42,7 @@ export class HardhatDeployer <
     contractName : string;
     args : TDeployArgs;
     kind : TProxyKind;
-  }) : Promise<IContractV6> {
+  }) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
     const deployment = await this.hre.upgrades.deployProxy(contractFactory, args, {
       kind,
@@ -61,7 +51,7 @@ export class HardhatDeployer <
     return this.awaitDeployment(contractName, deployment, contractFactory);
   }
 
-  async deployContract (contractName : string, args : TDeployArgs) : Promise<IContractV6> {
+  async deployContract (contractName : string, args : TDeployArgs) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
     const deployment = await contractFactory.deploy(...args);
 

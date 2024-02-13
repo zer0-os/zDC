@@ -6,15 +6,17 @@ import {
   DBVersioner, DeployCampaign,
   HardhatDeployer,
   IContractState,
-  IHardhatBase, IProviderBase, ISignerBase, MongoDBAdapter,
+  IProviderBase,
+  MongoDBAdapter,
   TLogger,
 } from "../../src";
 import { ATestDeployMission, makeMissionMock } from "../mocks/missions";
 import { HardhatMock } from "../mocks/hardhat";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 
 describe("Deploy Campaign Smoke Test", () => {
-  let campaign : DeployCampaign<IHardhatBase, ISignerBase, IProviderBase, IContractState>;
+  let campaign : DeployCampaign<IProviderBase, IContractState>;
   let missionIdentifiers : Array<string>;
   let hardhatMock : HardhatMock;
   let config : any;
@@ -193,7 +195,7 @@ describe("Deploy Campaign Smoke Test", () => {
 
     const state = campaign.state.instances as Record<
     string,
-    ATestDeployMission<HardhatMock, ISignerBase, IProviderBase, IContractState>
+    ATestDeployMission<IProviderBase, IContractState>
     >;
 
     // check proper sequence of methods called
@@ -248,7 +250,7 @@ describe("Deploy Campaign Smoke Test", () => {
 
     const state = campaign.state.instances as Record<
     string,
-    ATestDeployMission<HardhatMock, ISignerBase, IProviderBase, IContractState>
+    ATestDeployMission<IProviderBase, IContractState>
     >;
 
     // make sure verify() and getMonitoringData() are called on all missions

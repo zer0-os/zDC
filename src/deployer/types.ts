@@ -1,7 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { IContractV6 } from "../campaign/types";
-import { TDeployArgs, TProxyKind } from "../missions/types";
+import { TDeployArgs } from "../missions/types";
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { HardhatEthersHelpers } from "@nomicfoundation/hardhat-ethers/types";
+import { DefenderHardhatUpgrades, HardhatUpgrades } from "@openzeppelin/hardhat-upgrades";
+import { Contract } from "ethers";
 
+
+// TODO upg: remove all unnecesary types!
+export interface HardhatExtensions {
+  ethers : HardhatEthersHelpers;
+  upgrades : HardhatUpgrades | DefenderHardhatUpgrades;
+}
+
+export type HardhatExtended = HardhatRuntimeEnvironment & HardhatExtensions;
 
 export type THHTaskArguments = unknown;
 
@@ -10,25 +21,11 @@ export interface IHHSubtaskArguments {
 }
 
 export interface IContractFactoryBase {
-  deploy : (...args : TDeployArgs) => Promise<IContractV6>;
-  // TODO upg: remove all any types possible !
-  attach : (address : string) => any;
-  contractName : string;
-  interface : any;
-  bytecode : string;
-  runner : any;
-  getDeployTransaction : (args : TDeployArgs) => any;
-  connect : (runner : any) => IContractFactoryBase;
+  deploy : (...args : TDeployArgs) => Promise<Contract>;
+  attach : (address : string) => Contract;
 }
 
-export interface ISignerBase {
-  address : string;
-  getAddress ?: () => Promise<string>;
-}
-
-export interface ITxReceiptBase {
-  contractAddress : string;
-}
+export type TSigner = SignerWithAddress;
 
 export interface IProviderBase {
   waitForTransaction : (
@@ -36,6 +33,10 @@ export interface IProviderBase {
     confirmations ?: number | undefined,
     timeout ?: number | undefined
   ) => Promise<ITxReceiptBase>;
+}
+
+export interface ITxReceiptBase {
+  contractAddress : string;
 }
 
 export interface IContractArtifact {
@@ -47,16 +48,15 @@ export interface IContractArtifact {
 }
 
 export interface IFactoryOpts {
-  signer ?: ISignerBase;
+  signer ?: TSigner;
   libraries ?: unknown;
 }
 
 export type TGetFactoryArgs<
-  S extends ISignerBase,
   O extends IFactoryOpts,
 > = [
   name : string,
-  signerOrOptions ?: S | O,
+  signerOrOptions ?: TSigner | O,
 ];
 
 export type TRedeployImplementationOpt = "always" | "never" | "onchange";
@@ -84,51 +84,11 @@ export interface IUpgradeOpts extends IDeployOpts {
   call ?: string | { fn : string; args ?: Array<unknown>; };
 }
 
-export interface IHardhatBase {
-  run : (
-    taskIdentifier : string | { scope ?: string; task : string; },
-    taskArguments ?: THHTaskArguments,
-    subtaskArguments ?: IHHSubtaskArguments
-  ) => Promise<void>;
-  ethers : {
-    getContractFactory : <
-      F extends IContractFactoryBase,
-      S extends ISignerBase,
-      O extends IFactoryOpts,
-    > (
-      ...args : TGetFactoryArgs<S, O>
-    ) => Promise<F>;
-    provider : {
-      getCode : (address : string) => Promise<string>;
-    };
-  };
-  upgrades : {
-    deployProxy : <F extends IContractFactoryBase> (
-      factory : F,
-      args : TDeployArgs,
-      options : IDeployOpts,
-    ) => Promise<IContractV6>;
-    erc1967 : {
-      getImplementationAddress : (address : string) => Promise<string>;
-    };
-    upgradeProxy : <F extends IContractFactoryBase> (
-      proxy : string | IContractV6,
-      Contract : F,
-      opts : IUpgradeOpts,
-    ) => Promise<IContractV6>;
-  };
-  artifacts : {
-    readArtifactSync : (contractName : string) => IContractArtifact;
-  };
-}
-
 export interface IHardhatDeployerArgs<
-  H extends IHardhatBase,
-  S extends ISignerBase,
   P extends IProviderBase,
 > {
-  hre : H;
-  signer : S;
+  hre : HardhatExtended;
+  signer : TSigner;
   env : string;
   provider ?: P;
 }

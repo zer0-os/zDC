@@ -3,7 +3,8 @@ import { TDeployMissionCtor } from "../missions/types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
+import { IProviderBase, TSigner } from "../deployer/types";
+import { Contract } from "ethers";
 
 
 export interface ITransactionReceipt {
@@ -18,65 +19,50 @@ export type TCampaignDataType = bigint
   | boolean
   | object;
 
-export interface IBaseDataMap<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key : string] : TCampaignDataType | T | IBaseDataMap<T>;
+export interface IBaseDataMap {
+  [key : string] : TCampaignDataType | TSigner;
 }
 
 export interface IAddressable {
   getAddress : () => Promise<string>;
 }
 
-export interface IContractV6 {
-  getAddress : () => Promise<string>;
-  waitForDeployment : () => Promise<IContractV6>;
-  deploymentTransaction : () => ITransactionReceipt | null;
-  target : string | IAddressable;
-  interface : object;
-}
-
 export type TLogger = WinstonLogger | Console;
 
-export interface IContractState<C extends IContractV6 = IContractV6> {
+export interface IContractState<C extends Contract = Contract> {
   [key : string] : C;
 }
 
 export interface IMissionInstances <
-  H extends IHardhatBase,
-  S extends ISignerBase,
   P extends IProviderBase,
   St extends IContractState,
 > {
-  [key : string] : BaseDeployMission<H, S, P, St>;
+  [key : string] : BaseDeployMission<P, St>;
 }
 
 export interface ICampaignState <
-  H extends IHardhatBase,
-  S extends ISignerBase,
   P extends IProviderBase,
   St extends IContractState,
 > {
-  missions : Array<TDeployMissionCtor<H, S, P, St>>;
-  instances : IMissionInstances<H, S, P, St>;
+  missions : Array<TDeployMissionCtor<P, St>>;
+  instances : IMissionInstances<P, St>;
   contracts : St;
 }
 
 export interface ICampaignArgs <
-  H extends IHardhatBase,
-  S extends ISignerBase,
   P extends IProviderBase,
   St extends IContractState,
 > {
-  missions : Array<TDeployMissionCtor<H, S, P, St>>;
-  deployer : HardhatDeployer<H, S, P>;
+  missions : Array<TDeployMissionCtor<P, St>>;
+  deployer : HardhatDeployer<P>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
-  config : IDeployCampaignConfig<S>;
+  config : IDeployCampaignConfig;
 }
 
-export interface IDeployCampaignConfig <Signer> extends IBaseDataMap<Signer> {
+export interface IDeployCampaignConfig extends IBaseDataMap {
   env : string;
-  deployAdmin : Signer;
+  deployAdmin : TSigner;
   postDeploy : {
     tenderlyProjectSlug : string;
     monitorContracts : boolean;
