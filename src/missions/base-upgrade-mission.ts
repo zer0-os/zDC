@@ -10,8 +10,8 @@ export class BaseUpgradeMission <
   St extends IContractState,
 > extends BaseDeployMission<P, St> {
   async getUpgradeOperation () {
-    const newContract = await this.getDeployedFromDB();
-    const deployedContract = await this.getLatestFromDB();
+    const newContract = await this.getLatestFromDB();
+    const deployedContract = await this.getDeployedFromDB();
 
     // checking this first to know if this contract has been deployed previously
     // if not - we just deploy the new one

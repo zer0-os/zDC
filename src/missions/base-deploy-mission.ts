@@ -64,7 +64,7 @@ export class BaseDeployMission <
   }
 
   async needsDeploy () {
-    const dbContract = await this.getDeployedFromDB();
+    const dbContract = await this.getLatestFromDB();
 
     if (!dbContract) {
       this.logger.info(`${this.contractName} not found in DB, proceeding to deploy...`);
