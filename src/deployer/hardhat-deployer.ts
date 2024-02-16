@@ -16,6 +16,7 @@ export class HardhatDeployer <P extends IProviderBase> {
     hre,
     signer,
     env,
+    // TODO upg: remove this provider after update to latest oz-upgrades
     provider,
   } : IHardhatDeployerArgs<P>) {
     this.hre = hre;

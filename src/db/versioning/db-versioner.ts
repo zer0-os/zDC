@@ -57,6 +57,8 @@ export class DBVersioner {
         // what to do with the current DEPLOYED version
         if (this.archiveCurrentDeployed) {
           this.logger.debug("Archiving enabled - Archiving current DEPLOYED DB version...");
+          // TODO upg: fix this to only archive after the upgrade is done
+          //  in finalize() method
           // archive the current DEPLOYED version
           await this.versions.updateOne(
             {
@@ -167,6 +169,10 @@ export class DBVersioner {
     if (v) return v;
 
     return this.getDeployedVersion();
+  }
+
+  async getAllVersions () {
+    return this.versions.find().toArray();
   }
 
   async createUpdateTempVersion (version : string) {
