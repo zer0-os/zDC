@@ -16,7 +16,8 @@
     "resolveJsonModule": true,
     "strictPropertyInitialization": true,
     "noImplicitAny": true,
-    "declaration": true
+    "declaration": true,
+    "sourceMap": true,
   },
   "include": [
     "./src/**/*",
