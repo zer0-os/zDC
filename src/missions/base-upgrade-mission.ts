@@ -92,7 +92,7 @@ export class BaseUpgradeMission <
 
   async execute () {
     if (!this.config.upgrade) {
-      await super.execute();
+      return super.execute();
     }
 
     const op = await this.getUpgradeOperation();
