@@ -1,16 +1,14 @@
-import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
+import { ITenderlyContractData, TDeployArgs } from "../missions/types";
 import axios from "axios";
-import { IContractV6 } from "../campaign/types";
-import { IHardhatBase, ISignerBase, IProviderBase, IHardhatDeployerArgs } from "./types";
+import { IProviderBase, IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
+import { Contract, ContractFactory } from "ethers";
+import { UpgradeProxyOptions } from "@openzeppelin/hardhat-upgrades/dist/utils";
 
 
-export class HardhatDeployer <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  P extends IProviderBase,
-> {
-  hre : H;
-  signer : S;
+// TODO upg: try and remove this general provider type if possible
+export class HardhatDeployer <P extends IProviderBase> {
+  hre : HardhatExtended;
+  signer : TSigner;
   env : string;
   provider ?: P;
 
@@ -18,15 +16,16 @@ export class HardhatDeployer <
     hre,
     signer,
     env,
+    // TODO upg: remove this provider after update to latest oz-upgrades
     provider,
-  } : IHardhatDeployerArgs<H, S, P>) {
+  } : IHardhatDeployerArgs<P>) {
     this.hre = hre;
     this.signer = signer;
     this.env = env;
     this.provider = provider;
   }
 
-  async getFactory (contractName : string, signer ?: S) {
+  async getFactory (contractName : string, signer ?: TSigner) {
     const attachedSigner = signer ?? this.signer;
     return this.hre.ethers.getContractFactory(contractName, attachedSigner);
   }
@@ -40,47 +39,60 @@ export class HardhatDeployer <
   async deployProxy ({
     contractName,
     args,
-    kind,
+    opts,
   } : {
     contractName : string;
     args : TDeployArgs;
-    kind : TProxyKind;
-  }) : Promise<IContractV6> {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    opts : UpgradeProxyOptions;
+  }) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
-    const deployment = await this.hre.upgrades.deployProxy(contractFactory, args, {
-      kind,
-    });
+    const deployment = await this.hre.upgrades.deployProxy(contractFactory, args, opts);
 
-    let receipt;
-    if (!this.provider) {
-      return deployment.waitForDeployment();
-    } else {
-      const tx = await deployment.deploymentTransaction();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
-
-      return contractFactory.attach(receipt.contractAddress);
-    }
+    return this.awaitDeployment(contractName, deployment, contractFactory);
   }
 
-  async deployContract (contractName : string, args : TDeployArgs) : Promise<IContractV6> {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+  async deployContract (contractName : string, args : TDeployArgs) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
     const deployment = await contractFactory.deploy(...args);
 
-    let receipt;
+    return this.awaitDeployment(contractName, deployment, contractFactory);
+  }
+
+  async upgradeProxy (
+    contractName : string,
+    contractAddress : string,
+    upgradeOpts : UpgradeProxyOptions,
+  ) {
+    const contractFactory = await this.getFactory(contractName);
+
+    const deployment = await this.hre.upgrades.upgradeProxy(
+      contractAddress,
+      contractFactory,
+      upgradeOpts,
+    );
+
+    // TODO upg: is this going to be the same flow for upgrade as for deploy?
+    return this.awaitDeployment(contractName, deployment, contractFactory);
+  }
+
+  async awaitDeployment (
+    contractName : string,
+    deployment : Contract,
+    factory : ContractFactory,
+  ) : Promise<Contract> {
     if (!this.provider) {
       return deployment.waitForDeployment();
-    } else {
-      const tx = await deployment.deploymentTransaction();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
-
-      return contractFactory.attach(receipt.contractAddress);
     }
+
+    const tx = deployment.deploymentTransaction();
+
+    if (!tx) {
+      throw new Error(`No deployment transaction returned for ${contractName}!`);
+    }
+
+    const receipt = await this.provider.waitForTransaction(tx.hash, 3);
+
+    return factory.attach(receipt.contractAddress) as Contract;
   }
 
   getContractArtifact (contractName : string) {

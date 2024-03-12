@@ -6,41 +6,52 @@ import {
   ITenderlyContractData,
 } from "./types";
 import { DeployCampaign } from "../campaign/deploy-campaign";
-import { IContractState, IContractV6, IDeployCampaignConfig, TLogger } from "../campaign/types";
+import { IContractState, IDeployCampaignConfig, TLogger } from "../campaign/types";
 import { IContractDbData } from "../db/types";
 import { NetworkData } from "../deployer/constants";
-import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
+import { IProviderBase } from "../deployer/types";
+import { Contract } from "ethers";
 
 
 export class BaseDeployMission <
-  H extends IHardhatBase,
-  S extends ISignerBase,
   P extends IProviderBase,
   St extends IContractState,
 > {
   contractName! : string;
   instanceName! : string;
   proxyData! : IProxyData;
-  campaign : DeployCampaign<H, S, P, St>;
+  campaign : DeployCampaign<P, St>;
   logger : TLogger;
-  config : IDeployCampaignConfig<S>;
+  config : IDeployCampaignConfig;
   implAddress! : string | null;
 
   constructor ({
     campaign,
     logger,
     config,
-  } : IDeployMissionArgs<H, S, P, St>) {
+  } : IDeployMissionArgs<P, St>) {
     this.campaign = campaign;
     this.logger = logger;
     this.config = config;
   }
 
-  async getFromDB () {
+  async getDeployedFromDB () {
+    // ! Only one "DEPLOYED" version should exist in the DB at any time !
+    const deployedVersionDoc = await this.campaign.dbAdapter.versioner.getDeployedVersion();
+    if (!deployedVersionDoc) {
+      // TODO upg: will this be logged by a logger or should we add logger call as well? test!
+      // eslint-disable-next-line max-len
+      throw new Error("No deployed version found in DB. This method should be run in upgrade mode only, and the 'DEPLOYED' DB version should exist already from the previous deploy.");
+    }
+
+    return this.campaign.dbAdapter.getContract(this.contractName, deployedVersionDoc.dbVersion);
+  }
+
+  async getLatestFromDB () {
     return this.campaign.dbAdapter.getContract(this.contractName);
   }
 
-  async saveToDB (contract : IContractV6) {
+  async saveToDB (contract : Contract) {
     this.logger.debug(`Writing ${this.contractName} to DB...`);
 
     this.implAddress = this.proxyData.isProxy
@@ -53,7 +64,7 @@ export class BaseDeployMission <
   }
 
   async needsDeploy () {
-    const dbContract = await this.getFromDB();
+    const dbContract = await this.getLatestFromDB();
 
     if (!dbContract) {
       this.logger.info(`${this.contractName} not found in DB, proceeding to deploy...`);
@@ -83,7 +94,7 @@ export class BaseDeployMission <
   }
 
   async buildDbObject (
-    hhContract : IContractV6,
+    hhContract : Contract,
     implAddress : string | null
   ) : Promise<Omit<IContractDbData, "version">> {
     const { abi, bytecode } = this.getArtifact();
@@ -100,12 +111,12 @@ export class BaseDeployMission <
     const deployArgs = await this.deployArgs();
     this.logger.info(`Deploying ${this.contractName} with arguments: ${deployArgs}`);
 
-    let contract : IContractV6;
+    let contract : Contract;
     if (this.proxyData.isProxy) {
       contract = await this.campaign.deployer.deployProxy({
         contractName: this.contractName,
         args: deployArgs,
-        kind: this.proxyData.kind,
+        opts: { kind: this.proxyData.kind },
       });
     } else {
       contract = await this.campaign.deployer.deployContract(this.contractName, deployArgs);
