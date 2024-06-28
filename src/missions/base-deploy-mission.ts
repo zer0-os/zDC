@@ -36,12 +36,16 @@ export class BaseDeployMission <
     this.config = config;
   }
 
+  get dbName () : string {
+    return this.contractName;
+  }
+
   async getFromDB () {
-    return this.campaign.dbAdapter.getContract(this.contractName);
+    return this.campaign.dbAdapter.getContract(this.dbName);
   }
 
   async saveToDB (contract : IContractV6) {
-    this.logger.debug(`Writing ${this.contractName} to DB...`);
+    this.logger.debug(`Writing ${this.dbName} to DB...`);
 
     this.implAddress = this.proxyData.isProxy
       ? await this.campaign.deployer.getProxyImplAddress(await contract.getAddress())
@@ -49,19 +53,19 @@ export class BaseDeployMission <
 
     const contractDbDoc = await this.buildDbObject(contract, this.implAddress);
 
-    return this.campaign.dbAdapter.writeContract(this.contractName, contractDbDoc);
+    return this.campaign.dbAdapter.writeContract(this.dbName, contractDbDoc);
   }
 
   async needsDeploy () {
     const dbContract = await this.getFromDB();
 
     if (!dbContract) {
-      this.logger.info(`${this.contractName} not found in DB, proceeding to deploy...`);
+      this.logger.info(`${this.dbName} not found in DB, proceeding to deploy...`);
     } else {
-      this.logger.info(`${this.contractName} found in DB at ${dbContract.address}, no deployment needed.`);
+      this.logger.info(`${this.dbName} found in DB at ${dbContract.address}, no deployment needed.`);
 
       const contract = await this.campaign.deployer.getContractObject(
-        this.contractName,
+        this.dbName,
         dbContract.address,
       );
 
@@ -88,7 +92,7 @@ export class BaseDeployMission <
   ) : Promise<Omit<IContractDbData, "version">> {
     const { abi, bytecode } = this.getArtifact();
     return {
-      name: this.contractName,
+      name: this.dbName,
       address: await hhContract.getAddress(),
       abi: JSON.stringify(abi),
       bytecode,

@@ -13,6 +13,7 @@ export interface IDeployMissionArgs <
   campaign : DeployCampaign<H, S, P, St>;
   logger : TLogger;
   config : IDeployCampaignConfig<S>;
+  dbName ?: string;
 }
 
 export type TDeployMissionCtor<

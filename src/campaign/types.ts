@@ -20,7 +20,7 @@ export type TCampaignDataType = bigint
 
 export interface IBaseDataMap<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key : string] : TCampaignDataType | T | IBaseDataMap<T>;
+  [key : string] : TCampaignDataType | T | IBaseDataMap<T> | undefined;
 }
 
 export interface IAddressable {
