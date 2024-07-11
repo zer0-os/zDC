@@ -9,28 +9,28 @@ import { DeployCampaign } from "../campaign/deploy-campaign";
 import { IContractState, IContractV6, IDeployCampaignConfig, TLogger } from "../campaign/types";
 import { IContractDbData } from "../db/types";
 import { NetworkData } from "../deployer/constants";
-import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
+import { IHardhatBase, ISignerBase } from "../deployer/types";
 
 
 export class BaseDeployMission <
   H extends IHardhatBase,
   S extends ISignerBase,
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig<S>,
   St extends IContractState,
 > {
   contractName! : string;
   instanceName! : string;
   proxyData! : IProxyData;
-  campaign : DeployCampaign<H, S, P, St>;
+  campaign : DeployCampaign<H, S, C, St>;
   logger : TLogger;
-  config : IDeployCampaignConfig<S>;
+  config : C;
   implAddress! : string | null;
 
   constructor ({
     campaign,
     logger,
     config,
-  } : IDeployMissionArgs<H, S, P, St>) {
+  } : IDeployMissionArgs<H, S, C, St>) {
     this.campaign = campaign;
     this.logger = logger;
     this.config = config;

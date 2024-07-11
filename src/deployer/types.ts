@@ -86,11 +86,9 @@ export interface IHardhatBase {
 
 export interface IHardhatDeployerArgs<
   H extends IHardhatBase,
-  S extends ISignerBase,
-  P extends IProviderBase,
+  S extends ISignerBase
 > {
   hre : H;
   signer : S;
   env : string;
-  provider ?: P;
 }
