@@ -65,7 +65,7 @@ export class BaseDeployMission <
       this.logger.info(`${this.dbName} found in DB at ${dbContract.address}, no deployment needed.`);
 
       const contract = await this.campaign.deployer.getContractObject(
-        this.dbName,
+        this.contractName,
         dbContract.address,
       );
 
