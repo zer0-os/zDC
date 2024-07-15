@@ -96,6 +96,23 @@ export class MongoDBAdapter {
     });
   }
 
+  async getContracts (contractName : string, version ?: string) {
+    if (!version) {
+      ({ dbVersion: version } = await this.versioner.getCheckLatestVersion());
+    }
+
+    const cursor = await this.contracts.find({
+      name: contractName,
+      version,
+    });
+
+    const foundContracts = await cursor.toArray();
+
+    if (foundContracts.length > 0) {
+      return foundContracts;
+    } else return null;
+  }
+
   async writeContract (contractName : string, data : Omit<IContractDbData, "version">, version ?: string) {
     if (!version) {
       ({ dbVersion: version } = await this.versioner.getCheckLatestVersion());
