@@ -41,11 +41,11 @@ export class BaseDeployMission <
   }
 
   async getFromDB () {
-    return this.campaign.dbAdapter.getContract(this.dbName);
+    return this.campaign.dbAdapter.getContract(this.contractName);
   }
 
   async saveToDB (contract : IContractV6) {
-    this.logger.debug(`Writing ${this.dbName} to DB...`);
+    this.logger.debug(`Writing ${this.contractName} to DB...`);
 
     this.implAddress = this.proxyData.isProxy
       ? await this.campaign.deployer.getProxyImplAddress(await contract.getAddress())
@@ -53,19 +53,18 @@ export class BaseDeployMission <
 
     const contractDbDoc = await this.buildDbObject(contract, this.implAddress);
 
-    return this.campaign.dbAdapter.writeContract(this.dbName, contractDbDoc);
+    return this.campaign.dbAdapter.writeContract(this.contractName, contractDbDoc);
   }
 
   async needsDeploy () {
     const dbContract = await this.getFromDB();
 
     if (!dbContract) {
-      this.logger.info(`${this.dbName} not found in DB, proceeding to deploy...`);
+      this.logger.info(`${this.contractName} not found in DB, proceeding to deploy...`);
     } else {
-      this.logger.info(`${this.dbName} found in DB at ${dbContract.address}, no deployment needed.`);
-
+      this.logger.info(`${this.contractName} found in DB at ${dbContract.address}, no deployment needed.`);
       const contract = await this.campaign.deployer.getContractObject(
-        this.dbName,
+        this.contractName,
         dbContract.address,
       );
 
@@ -91,11 +90,26 @@ export class BaseDeployMission <
     implAddress : string | null
   ) : Promise<Omit<IContractDbData, "version">> {
     const { abi, bytecode } = this.getArtifact();
+
+    const bnToString = (key : string, value : TDeployArgs) => {
+      if (typeof value === "bigint") {
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        return `${(value as BigInt).toString()}n`;
+      }
+
+      if (Array.isArray(value) && value.length === 0) {
+        return undefined;
+      }
+
+      return value;
+    };
+
     return {
-      name: this.dbName,
+      name: this.contractName,
       address: await hhContract.getAddress(),
       abi: JSON.stringify(abi),
       bytecode,
+      args: JSON.stringify(await this.deployArgs(), bnToString),
       implementation: implAddress,
     };
   }
