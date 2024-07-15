@@ -1,29 +1,25 @@
 import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
 import axios from "axios";
 import { IContractV6 } from "../campaign/types";
-import { IHardhatBase, ISignerBase, IProviderBase, IHardhatDeployerArgs } from "./types";
+import { IHardhatBase, ISignerBase, IHardhatDeployerArgs } from "./types";
 
 
 export class HardhatDeployer <
   H extends IHardhatBase,
-  S extends ISignerBase,
-  P extends IProviderBase,
+  S extends ISignerBase
 > {
   hre : H;
   signer : S;
   env : string;
-  provider ?: P;
 
   constructor ({
     hre,
     signer,
     env,
-    provider,
-  } : IHardhatDeployerArgs<H, S, P>) {
+  } : IHardhatDeployerArgs<H, S>) {
     this.hre = hre;
     this.signer = signer;
     this.env = env;
-    this.provider = provider;
   }
 
   async getFactory (contractName : string, signer ?: S) {
@@ -53,16 +49,7 @@ export class HardhatDeployer <
       kind,
     });
 
-    let receipt;
-    if (!this.provider) {
-      return deployment.waitForDeployment();
-    } else {
-      const tx = await deployment.deploymentTransaction();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
-
-      return contractFactory.attach(receipt.contractAddress);
-    }
+    return deployment.waitForDeployment();
   }
 
   async deployContract (contractName : string, args : TDeployArgs) : Promise<IContractV6> {
@@ -71,16 +58,7 @@ export class HardhatDeployer <
     const contractFactory = await this.getFactory(contractName);
     const deployment = await contractFactory.deploy(...args);
 
-    let receipt;
-    if (!this.provider) {
-      return deployment.waitForDeployment();
-    } else {
-      const tx = await deployment.deploymentTransaction();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      receipt = await this.provider.waitForTransaction(tx!.hash, 3);
-
-      return contractFactory.attach(receipt.contractAddress);
-    }
+    return deployment.waitForDeployment();
   }
 
   getContractArtifact (contractName : string) {

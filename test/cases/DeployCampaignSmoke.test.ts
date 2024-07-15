@@ -5,8 +5,8 @@ import assert from "assert";
 import {
   DBVersioner, DeployCampaign,
   HardhatDeployer,
-  IContractState,
-  IHardhatBase, IProviderBase, ISignerBase, MongoDBAdapter,
+  IContractState, IDeployCampaignConfig,
+  IHardhatBase, ISignerBase, MongoDBAdapter,
   TLogger,
 } from "../../src";
 import { ATestDeployMission, makeMissionMock } from "../mocks/missions";
@@ -14,7 +14,7 @@ import { HardhatMock } from "../mocks/hardhat";
 
 
 describe("Deploy Campaign Smoke Test", () => {
-  let campaign : DeployCampaign<IHardhatBase, ISignerBase, IProviderBase, IContractState>;
+  let campaign : DeployCampaign<IHardhatBase, ISignerBase, IDeployCampaignConfig<ISignerBase>, IContractState>;
   let missionIdentifiers : Array<string>;
   let hardhatMock : HardhatMock;
   let config : any;
@@ -66,7 +66,6 @@ describe("Deploy Campaign Smoke Test", () => {
       hre: hardhatMock,
       signer: signerMock,
       env: "prod",
-      provider: providerMock,
     });
 
     const collectionMock = {
@@ -193,7 +192,7 @@ describe("Deploy Campaign Smoke Test", () => {
 
     const state = campaign.state.instances as Record<
     string,
-    ATestDeployMission<HardhatMock, ISignerBase, IProviderBase, IContractState>
+    ATestDeployMission<HardhatMock, ISignerBase, IDeployCampaignConfig<ISignerBase>, IContractState>
     >;
 
     // check proper sequence of methods called
@@ -248,7 +247,7 @@ describe("Deploy Campaign Smoke Test", () => {
 
     const state = campaign.state.instances as Record<
     string,
-    ATestDeployMission<HardhatMock, ISignerBase, IProviderBase, IContractState>
+    ATestDeployMission<HardhatMock, ISignerBase, IDeployCampaignConfig<ISignerBase>, IContractState>
     >;
 
     // make sure verify() and getMonitoringData() are called on all missions

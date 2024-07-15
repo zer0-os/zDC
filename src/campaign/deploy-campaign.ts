@@ -9,21 +9,21 @@ import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { ITenderlyContractData, TDeployMissionCtor } from "../missions/types";
 import { BaseDeployMission } from "../missions/base-deploy-mission";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IHardhatBase, IProviderBase, ISignerBase } from "../deployer/types";
+import { IHardhatBase, ISignerBase } from "../deployer/types";
 import { makeCampaignProxy } from "./proxy";
 
 
 export class DeployCampaign <
   H extends IHardhatBase,
   S extends ISignerBase,
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig<S>,
   St extends IContractState<IContractV6>,
 > {
-  state : ICampaignState<H, S, P, St>;
-  deployer : HardhatDeployer<H, S, P>;
+  state : ICampaignState<H, S, C, St>;
+  deployer : HardhatDeployer<H, S>;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
-  config : IDeployCampaignConfig<S>;
+  config : C;
 
   // TODO dep: improve typing here so that methods of each contract type are resolved in Mission classes!
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,7 +35,7 @@ export class DeployCampaign <
     dbAdapter,
     logger,
     config,
-  } : ICampaignArgs<H, S, P, St>) {
+  } : ICampaignArgs<H, S, C, St>) {
     this.state = {
       missions,
       instances: {},
@@ -50,7 +50,7 @@ export class DeployCampaign <
 
     // instantiate all missions
     this.state.instances = missions.reduce(
-      (acc : IMissionInstances<H, S, P, St>, mission : TDeployMissionCtor<H, S, P, St>) => {
+      (acc : IMissionInstances<H, S, C, St>, mission : TDeployMissionCtor<H, S, C, St>) => {
         const instance = new mission({
           campaign: campaignProxy,
           logger,
@@ -74,7 +74,7 @@ export class DeployCampaign <
     await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<H, S, P, St>,
+        missionInstance : BaseDeployMission<H, S, C, St>,
       ) : Promise<void> => {
         await acc;
         return missionInstance.execute();
@@ -103,7 +103,7 @@ export class DeployCampaign <
     return Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<H, S, P, St>,
+        missionInstance : BaseDeployMission<H, S, C, St>,
       ) => {
         await acc;
         return missionInstance.verify();
@@ -118,7 +118,7 @@ export class DeployCampaign <
     const contracts = await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<Array<ITenderlyContractData>>,
-        missionInstance : BaseDeployMission<H, S, P, St>,
+        missionInstance : BaseDeployMission<H, S, C, St>,
       ) : Promise<Array<ITenderlyContractData>> => {
         const newAcc = await acc;
         const data = await missionInstance.getMonitoringData();
