@@ -69,7 +69,7 @@ export interface IHardhatBase {
       getCode : (address : string) => Promise<string>;
     };
   };
-  upgrades : {
+  upgrades ?: {
     deployProxy : <F extends IContractFactoryBase> (
       factory : F,
       args : TDeployArgs,
