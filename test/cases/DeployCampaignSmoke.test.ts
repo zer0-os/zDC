@@ -1,7 +1,7 @@
 // eslint-disable-next-line max-len
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function, @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 import { Db, DbOptions, MongoClient, MongoClientOptions } from "mongodb";
-import assert from "assert";
+import * as assert from "assert";
 import {
   DBVersioner, DeployCampaign,
   HardhatDeployer,
@@ -117,7 +117,7 @@ describe("Deploy Campaign Smoke Test", () => {
       contractsVersion,
     });
 
-    await mongoAdapterMock.initialize(dbVersion);
+    await mongoAdapterMock.initialize();
 
     missionIdentifiers = [
       "noProxy",
