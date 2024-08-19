@@ -5,7 +5,7 @@ import { TLogger } from "../../campaign/types";
 
 
 export class DBVersioner {
-  curDbVersion : string;
+  curDbVersion ?: string;
   contractsVersion : string;
   archiveCurrentDeployed : boolean;
   logger : TLogger;
@@ -26,31 +26,34 @@ export class DBVersioner {
       this.contractsVersion = contractsVersion;
     }
 
-    // TODO: remove this if no reason to use
-    this.curDbVersion = dbVersion || "0";
+    this.curDbVersion = dbVersion;
     this.archiveCurrentDeployed = !!archive;
     this.logger = logger;
 
     this.versions = {} as Collection<IDBVersion>;
   }
 
-  async configureVersioning (db : Db, version ?: string) {
+  async configureVersioning (db : Db) {
     this.versions = db.collection(COLL_NAMES.versions);
 
     const tempV = await this.getTempVersion();
     const deployedV = await this.getDeployedVersion();
 
     let finalVersion : string;
-    if (version) {
-      finalVersion = version;
+    if (this.curDbVersion) {
+      finalVersion = this.curDbVersion;
 
-      if (!deployedV || version !== deployedV.dbVersion) {
+      if (!deployedV || this.curDbVersion !== deployedV.dbVersion) {
         // we should only have a single TEMP version at any given time
-        if (tempV && version !== tempV.dbVersion) {
+        if (tempV && this.curDbVersion !== tempV.dbVersion) {
+          this.logger.debug("Clearing existing TEMP DB version...");
           await this.clearDBForVersion(tempV.dbVersion, db);
         }
 
+        this.logger.debug(`Updating TEMP version for the new one: ${finalVersion}`);
         await this.createUpdateTempVersion(finalVersion);
+      } else {
+        this.logger.debug(`Using existing DEPLOYED DB version: ${finalVersion}`);
       }
     } else {
       if (!tempV) {
@@ -68,9 +71,11 @@ export class DBVersioner {
               },
             });
         } else {
-          this.logger.debug("Archiving disabled - Clearing current DEPLOYED DB version...");
-          // get the current DEPLOYED and clear DB for that version
-          if (deployedV) await this.clearDBForVersion(deployedV.dbVersion, db);
+          if (deployedV) {
+            // get the current DEPLOYED and clear DB for that version
+            this.logger.debug("Archiving disabled - Clearing current DEPLOYED DB version...");
+            await this.clearDBForVersion(deployedV.dbVersion, db);
+          }
         }
 
         // create new TEMP version
@@ -84,7 +89,8 @@ export class DBVersioner {
       }
     }
 
-    return finalVersion;
+    this.curDbVersion = finalVersion;
+    return this.curDbVersion;
   }
 
   async finalizeDeployedVersion (version ?: string) {

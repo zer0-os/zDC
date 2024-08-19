@@ -69,8 +69,8 @@ export class MongoDBAdapter {
     return this.db;
   }
 
-  async configureVersioning (version ?: string) {
-    return this.versioner.configureVersioning(this.db, version);
+  async configureVersioning () {
+    return this.versioner.configureVersioning(this.db);
   }
 
   async close (forceClose = false) {

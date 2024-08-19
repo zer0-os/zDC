@@ -92,7 +92,8 @@ export class DeployCampaign <
       await this.monitor();
     }
 
-    this.logger.info("Deploy Campaign execution finished successfully.");
+    // eslint-disable-next-line max-len
+    this.logger.info(`Deploy Campaign execution finished successfully under DB Version: ${this.dbAdapter.versioner.curDbVersion}.`);
   }
 
   updateStateContract (instanceName : string, contractName : string, contract : IContractV6) {
