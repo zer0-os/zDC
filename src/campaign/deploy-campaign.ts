@@ -71,6 +71,8 @@ export class DeployCampaign <
   async execute () {
     this.logger.info("Deploy Campaign execution started.");
 
+    await this.dbAdapter.configureVersioning();
+
     await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
