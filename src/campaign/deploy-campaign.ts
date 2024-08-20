@@ -71,6 +71,8 @@ export class DeployCampaign <
   async execute () {
     this.logger.info("Deploy Campaign execution started.");
 
+    await this.dbAdapter.configureVersioning();
+
     await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
@@ -90,7 +92,8 @@ export class DeployCampaign <
       await this.monitor();
     }
 
-    this.logger.info("Deploy Campaign execution finished successfully.");
+    // eslint-disable-next-line max-len
+    this.logger.info(`Deploy Campaign execution finished successfully under DB Version: ${this.dbAdapter.versioner.curDbVersion}.`);
   }
 
   updateStateContract (instanceName : string, contractName : string, contract : IContractV6) {

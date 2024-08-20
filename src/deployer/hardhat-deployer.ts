@@ -45,7 +45,8 @@ export class HardhatDeployer <
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const contractFactory = await this.getFactory(contractName);
-    const deployment = await this.hre.upgrades.deployProxy(contractFactory, args, {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const deployment = await this.hre.upgrades!.deployProxy(contractFactory, args, {
       kind,
     });
 
@@ -66,7 +67,8 @@ export class HardhatDeployer <
   }
 
   async getProxyImplAddress (proxyContract : string) {
-    return this.hre.upgrades.erc1967.getImplementationAddress(proxyContract);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.hre.upgrades!.erc1967.getImplementationAddress(proxyContract);
   }
 
   async getBytecodeFromChain (address : string) {

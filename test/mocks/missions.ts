@@ -3,7 +3,6 @@ import {
   BaseDeployMission,
   IContractState, IDeployCampaignConfig, IDeployMissionArgs,
   IHardhatBase,
-  IProviderBase,
   ISignerBase,
   ProxyKinds,
   TDeployArgs,
