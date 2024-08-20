@@ -1,5 +1,6 @@
 {
   "root": true,
+  "ignorePatterns": ["*.js", "*.d.ts"],
   "overrides": [
     {
       "files": ["src/**/*.ts", "test/**/*.ts", "./*.ts"],

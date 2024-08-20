@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "yarn build",
-    "lint": "yarn eslint ./src/** --ext .ts",
+    "lint": "yarn eslint .",
     "test": "mocha --require ts-node/register ./test/cases/*.ts"
   },
   "pre-commit": [

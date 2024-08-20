@@ -3,7 +3,7 @@ import {
   IContractArtifact,
   IContractFactoryBase,
   IContractV6,
-  IHardhatBase, IHHSubtaskArguments, ISignerBase,
+  IHardhatBase, IHHSubtaskArguments,
   TDeployArgs,
   THHTaskArguments,
   TProxyKind,
