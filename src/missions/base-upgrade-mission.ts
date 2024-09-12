@@ -1,14 +1,13 @@
 import { BaseDeployMission } from "./base-deploy-mission";
-import { IProviderBase } from "../deployer";
-import { IContractState } from "../campaign";
+import { IContractState, IDeployCampaignConfig } from "../campaign";
 import { UpgradeOps } from "./constants";
 import { IContractDbData } from "../db";
 
 
 export class BaseUpgradeMission <
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
-> extends BaseDeployMission<P, St> {
+> extends BaseDeployMission<C, St> {
   async getUpgradeOperation () {
     const newContract = await this.getLatestFromDB();
     const deployedContract = await this.getDeployedFromDB();

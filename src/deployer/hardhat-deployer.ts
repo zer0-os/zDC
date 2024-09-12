@@ -1,6 +1,6 @@
 import { ITenderlyContractData, TDeployArgs } from "../missions/types";
 import axios from "axios";
-import { IProviderBase, IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
+import { IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
 import { Contract, ContractFactory } from "ethers";
 import { UpgradeProxyOptions } from "@openzeppelin/hardhat-upgrades/dist/utils";
 
@@ -14,7 +14,6 @@ export class HardhatDeployer {
     hre,
     signer,
     env,
-    provider,
   } : IHardhatDeployerArgs) {
     this.hre = hre;
     this.signer = signer;
@@ -77,7 +76,7 @@ export class HardhatDeployer {
     deployment : Contract,
     factory : ContractFactory,
   ) : Promise<Contract> {
-      return deployment.waitForDeployment();
+    return deployment.waitForDeployment();
   }
 
   getContractArtifact (contractName : string) {
@@ -86,7 +85,7 @@ export class HardhatDeployer {
 
   async getProxyImplAddress (proxyContract : string) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.hre.upgrades!.erc1967.getImplementationAddress(proxyContract);
+    return this.hre.upgrades.erc1967.getImplementationAddress(proxyContract);
   }
 
   async getBytecodeFromChain (address : string) {

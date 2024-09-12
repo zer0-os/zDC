@@ -19,7 +19,7 @@ export class BaseDeployMission <
   contractName! : string;
   instanceName! : string;
   proxyData! : IProxyData;
-  campaign : DeployCampaign<С, St>;
+  campaign : DeployCampaign<C, St>;
   logger : TLogger;
   config : C;
   implAddress! : string | null;
@@ -28,7 +28,7 @@ export class BaseDeployMission <
     campaign,
     logger,
     config,
-  } : IDeployMissionArgs<С, St>) {
+  } : IDeployMissionArgs<C, St>) {
     this.campaign = campaign;
     this.logger = logger;
     this.config = config;
