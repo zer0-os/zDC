@@ -9,20 +9,19 @@ import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { ITenderlyContractData, TDeployMissionCtor } from "../missions/types";
 import { BaseDeployMission } from "../missions/base-deploy-mission";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IProviderBase } from "../deployer/types";
 import { makeCampaignProxy } from "./proxy";
 import { Contract } from "ethers";
 
 
 export class DeployCampaign <
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
-  state : ICampaignState<P, St>;
-  deployer : HardhatDeployer<P>;
+  state : ICampaignState<C, St>;
+  deployer : HardhatDeployer;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
-  config : IDeployCampaignConfig;
+  config : C;
 
   // TODO dep: improve typing here so that methods of each contract type are resolved in Mission classes!
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,7 +33,7 @@ export class DeployCampaign <
     dbAdapter,
     logger,
     config,
-  } : ICampaignArgs<P, St>) {
+  } : ICampaignArgs<C, St>) {
     this.state = {
       missions,
       instances: {},
@@ -49,7 +48,7 @@ export class DeployCampaign <
 
     // instantiate all missions
     this.state.instances = missions.reduce(
-      (acc : IMissionInstances<P, St>, mission : TDeployMissionCtor<P, St>) => {
+      (acc : IMissionInstances<C, St>, mission : TDeployMissionCtor<C, St>) => {
         const instance = new mission({
           campaign: campaignProxy,
           logger,
@@ -70,10 +69,12 @@ export class DeployCampaign <
   async execute () {
     this.logger.info("Deploy Campaign execution started.");
 
+    await this.dbAdapter.configureVersioning();
+
     await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<P, St>,
+        missionInstance : BaseDeployMission<C, St>,
       ) : Promise<void> => {
         await acc;
         return missionInstance.execute();
@@ -89,7 +90,8 @@ export class DeployCampaign <
       await this.monitor();
     }
 
-    this.logger.info("Deploy Campaign execution finished successfully.");
+    // eslint-disable-next-line max-len
+    this.logger.info(`Deploy Campaign execution finished successfully under DB Version: ${this.dbAdapter.versioner.curDbVersion}.`);
   }
 
   updateStateContract (instanceName : string, contractName : string, contract : Contract) {
@@ -102,7 +104,7 @@ export class DeployCampaign <
     return Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<P, St>,
+        missionInstance : BaseDeployMission<C, St>,
       ) => {
         await acc;
         return missionInstance.verify();
@@ -117,7 +119,7 @@ export class DeployCampaign <
     const contracts = await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<Array<ITenderlyContractData>>,
-        missionInstance : BaseDeployMission<P, St>,
+        missionInstance : BaseDeployMission<C, St>,
       ) : Promise<Array<ITenderlyContractData>> => {
         const newAcc = await acc;
         const data = await missionInstance.getMonitoringData();

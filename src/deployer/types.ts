@@ -67,11 +67,8 @@ export interface IRedeployImplementationOpts {
   onchange : TRedeployImplementationOpt;
 }
 
-export interface IHardhatDeployerArgs<
-  P extends IProviderBase,
-> {
+export interface IHardhatDeployerArgs {
   hre : HardhatExtended;
   signer : TSigner;
   env : string;
-  provider ?: P;
 }

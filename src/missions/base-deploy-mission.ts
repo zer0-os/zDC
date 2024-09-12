@@ -9,30 +9,33 @@ import { DeployCampaign } from "../campaign/deploy-campaign";
 import { IContractState, IDeployCampaignConfig, TLogger } from "../campaign/types";
 import { IContractDbData } from "../db/types";
 import { NetworkData } from "../deployer/constants";
-import { IProviderBase } from "../deployer/types";
 import { Contract } from "ethers";
 
 
 export class BaseDeployMission <
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
   contractName! : string;
   instanceName! : string;
   proxyData! : IProxyData;
-  campaign : DeployCampaign<P, St>;
+  campaign : DeployCampaign<С, St>;
   logger : TLogger;
-  config : IDeployCampaignConfig;
+  config : C;
   implAddress! : string | null;
 
   constructor ({
     campaign,
     logger,
     config,
-  } : IDeployMissionArgs<P, St>) {
+  } : IDeployMissionArgs<С, St>) {
     this.campaign = campaign;
     this.logger = logger;
     this.config = config;
+  }
+
+  get dbName () : string {
+    return this.contractName;
   }
 
   async getDeployedFromDB () {
@@ -52,7 +55,7 @@ export class BaseDeployMission <
   }
 
   async saveToDB (contract : Contract) {
-    this.logger.debug(`Writing ${this.contractName} to DB...`);
+    this.logger.debug(`Writing ${this.dbName} to DB...`);
 
     this.implAddress = this.proxyData.isProxy
       ? await this.campaign.deployer.getProxyImplAddress(await contract.getAddress())
@@ -60,16 +63,16 @@ export class BaseDeployMission <
 
     const contractDbDoc = await this.buildDbObject(contract, this.implAddress);
 
-    return this.campaign.dbAdapter.writeContract(this.contractName, contractDbDoc);
+    return this.campaign.dbAdapter.writeContract(this.dbName, contractDbDoc);
   }
 
   async needsDeploy () {
     const dbContract = await this.getLatestFromDB();
 
     if (!dbContract) {
-      this.logger.info(`${this.contractName} not found in DB, proceeding to deploy...`);
+      this.logger.info(`${this.dbName} not found in DB, proceeding to deploy...`);
     } else {
-      this.logger.info(`${this.contractName} found in DB at ${dbContract.address}, no deployment needed.`);
+      this.logger.info(`${this.dbName} found in DB at ${dbContract.address}, no deployment needed.`);
 
       const contract = await this.campaign.deployer.getContractObject(
         this.contractName,
@@ -99,7 +102,7 @@ export class BaseDeployMission <
   ) : Promise<Omit<IContractDbData, "version">> {
     const { abi, bytecode } = this.getArtifact();
     return {
-      name: this.contractName,
+      name: this.dbName,
       address: await hhContract.getAddress(),
       abi: JSON.stringify(abi),
       bytecode,

@@ -2,8 +2,8 @@
 import {
   BaseDeployMission,
   IContractState,
+  IDeployCampaignConfig,
   IDeployMissionArgs,
-  IProviderBase,
   ProxyKinds,
   TDeployArgs,
 } from "../../src";
@@ -21,14 +21,14 @@ export const makeTestMissionProxy = (mission : any) => new Proxy(mission, {
 });
 
 export abstract class ATestDeployMission<
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
-> extends BaseDeployMission<P, St> {
+> extends BaseDeployMission<C, St> {
   called : Array<IExecutedCall | string> = [];
 }
 
 export const makeMissionMock = <
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > ({
   _contractName,
@@ -44,7 +44,7 @@ export const makeMissionMock = <
   _deployArgs : TDeployArgs;
   _needsPostDeploy : boolean;
   _postDeployCb : () => Promise<void>;
-}) => class TestMission extends ATestDeployMission<P, St> {
+}) => class TestMission extends ATestDeployMission<C, St> {
   called : Array<IExecutedCall> = [];
 
   proxyData = {
@@ -55,7 +55,7 @@ export const makeMissionMock = <
   contractName = _contractName;
   instanceName = _instanceName;
 
-  constructor (args : IDeployMissionArgs<P, St>) {
+  constructor (args : IDeployMissionArgs<C, St>) {
     super(args);
 
     return makeTestMissionProxy(this);

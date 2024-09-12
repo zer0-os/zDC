@@ -1,5 +1,5 @@
 import { Collection, Db, MongoClient, MongoClientOptions } from "mongodb";
-import { TLogger } from "../../campaign/types";
+import { TLogger } from "../../campaign";
 import { IMongoDBAdapterArgs } from "./types";
 import { COLL_NAMES } from "./constants";
 import { IContractDbData } from "../types";
@@ -48,7 +48,7 @@ export class MongoDBAdapter {
   }
 
   // call this to actually start the adapter
-  async initialize (version ?: string) {
+  async initialize () {
     try {
       await this.client.connect();
       this.db = this.client.db(this.dbName);
@@ -66,9 +66,11 @@ export class MongoDBAdapter {
 
     this.contracts = this.db.collection(COLL_NAMES.contracts);
 
-    this.curDbVersion = await this.versioner.configureVersioning(this.db, version);
-
     return this.db;
+  }
+
+  async configureVersioning () {
+    return this.versioner.configureVersioning(this.db);
   }
 
   async close (forceClose = false) {

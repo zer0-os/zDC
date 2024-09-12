@@ -5,24 +5,20 @@ import { Contract, ContractFactory } from "ethers";
 import { UpgradeProxyOptions } from "@openzeppelin/hardhat-upgrades/dist/utils";
 
 
-// TODO upg: try and remove this general provider type if possible
-export class HardhatDeployer <P extends IProviderBase> {
+export class HardhatDeployer {
   hre : HardhatExtended;
   signer : TSigner;
   env : string;
-  provider ?: P;
 
   constructor ({
     hre,
     signer,
     env,
-    // TODO upg: remove this provider after update to latest oz-upgrades
     provider,
-  } : IHardhatDeployerArgs<P>) {
+  } : IHardhatDeployerArgs) {
     this.hre = hre;
     this.signer = signer;
     this.env = env;
-    this.provider = provider;
   }
 
   async getFactory (contractName : string, signer ?: TSigner) {
@@ -48,14 +44,14 @@ export class HardhatDeployer <P extends IProviderBase> {
     const contractFactory = await this.getFactory(contractName);
     const deployment = await this.hre.upgrades.deployProxy(contractFactory, args, opts);
 
-    return this.awaitDeployment(contractName, deployment, contractFactory);
+    return deployment.waitForDeployment();
   }
 
   async deployContract (contractName : string, args : TDeployArgs) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
     const deployment = await contractFactory.deploy(...args);
 
-    return this.awaitDeployment(contractName, deployment, contractFactory);
+    return deployment.waitForDeployment();
   }
 
   async upgradeProxy (
@@ -75,24 +71,13 @@ export class HardhatDeployer <P extends IProviderBase> {
     return this.awaitDeployment(contractName, deployment, contractFactory);
   }
 
+  // TODO upg: remove this function if not needed!
   async awaitDeployment (
     contractName : string,
     deployment : Contract,
     factory : ContractFactory,
   ) : Promise<Contract> {
-    if (!this.provider) {
       return deployment.waitForDeployment();
-    }
-
-    const tx = deployment.deploymentTransaction();
-
-    if (!tx) {
-      throw new Error(`No deployment transaction returned for ${contractName}!`);
-    }
-
-    const receipt = await this.provider.waitForTransaction(tx.hash, 3);
-
-    return factory.attach(receipt.contractAddress) as Contract;
   }
 
   getContractArtifact (contractName : string) {
@@ -100,7 +85,8 @@ export class HardhatDeployer <P extends IProviderBase> {
   }
 
   async getProxyImplAddress (proxyContract : string) {
-    return this.hre.upgrades.erc1967.getImplementationAddress(proxyContract);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.hre.upgrades!.erc1967.getImplementationAddress(proxyContract);
   }
 
   async getBytecodeFromChain (address : string) {

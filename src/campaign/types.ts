@@ -7,6 +7,17 @@ import { IProviderBase, TSigner } from "../deployer/types";
 import { ContractInterface, BaseContract } from "ethers";
 
 
+export interface IDeployCampaignConfig extends IBaseDataMap {
+  env : string;
+  upgrade : boolean;
+  deployAdmin : TSigner;
+  postDeploy : {
+    tenderlyProjectSlug : string;
+    monitorContracts : boolean;
+    verifyContracts : boolean;
+  };
+}
+
 export interface ITransactionReceipt {
   hash : string;
 }
@@ -20,7 +31,7 @@ export type TCampaignDataType = bigint
   | object;
 
 export interface IBaseDataMap {
-  [key : string] : TCampaignDataType | TSigner;
+  [key : string] : TCampaignDataType | TSigner | undefined;
 }
 
 export interface IAddressable {
@@ -36,39 +47,28 @@ export interface IContractState {
 }
 
 export interface IMissionInstances <
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
-  [key : string] : BaseDeployMission<P, St>;
+  [key : string] : BaseDeployMission<C, St>;
 }
 
 export interface ICampaignState <
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
-  missions : Array<TDeployMissionCtor<P, St>>;
-  instances : IMissionInstances<P, St>;
+  missions : Array<TDeployMissionCtor<C, St>>;
+  instances : IMissionInstances<C, St>;
   contracts : St;
 }
 
 export interface ICampaignArgs <
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
-  missions : Array<TDeployMissionCtor<P, St>>;
-  deployer : HardhatDeployer<P>;
+  missions : Array<TDeployMissionCtor<C, St>>;
+  deployer : HardhatDeployer;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
-  config : IDeployCampaignConfig;
-}
-
-export interface IDeployCampaignConfig extends IBaseDataMap {
-  env : string;
-  upgrade : boolean;
-  deployAdmin : TSigner;
-  postDeploy : {
-    tenderlyProjectSlug : string;
-    monitorContracts : boolean;
-    verifyContracts : boolean;
-  };
+  config : C;
 }

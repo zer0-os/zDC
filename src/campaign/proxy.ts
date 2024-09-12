@@ -1,11 +1,10 @@
-import { IProviderBase } from "../deployer/types";
 import { DeployCampaign } from "./deploy-campaign";
-import { IContractState } from "./types";
+import { IContractState, IDeployCampaignConfig } from "./types";
 
 export const makeCampaignProxy = <
-  P extends IProviderBase,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
-> (campaign : DeployCampaign<P, St>) => new Proxy(campaign, {
+> (campaign : DeployCampaign<C, St>) => new Proxy(campaign, {
   get : (target, prop) => {
     if (typeof prop === "string") {
       if (!!target.state.contracts[prop]) {

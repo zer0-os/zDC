@@ -6,6 +6,7 @@
   },
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./src",
     "target": "es2022",
     "module": "node16",
     "moduleResolution": "node16",
@@ -16,10 +17,10 @@
     "resolveJsonModule": true,
     "strictPropertyInitialization": true,
     "noImplicitAny": true,
-    "declaration": true,
-    "sourceMap": true,
+    "declaration": true
   },
-  "include": [
-    "./src/**/*",
-  ],
+  "exclude": [
+    "./test/**/*",
+    "./dist/**/*"
+  ]
 }

@@ -1,12 +1,11 @@
 // eslint-disable-next-line max-len
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function, @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 import { Db, DbOptions, MongoClient, MongoClientOptions } from "mongodb";
-import assert from "assert";
+import * as assert from "assert";
 import {
   DBVersioner, DeployCampaign,
   HardhatDeployer,
-  IContractState,
-  IProviderBase,
+  IContractState, IDeployCampaignConfig,
   MongoDBAdapter,
   TLogger,
 } from "../../src";
@@ -16,7 +15,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 
 describe("Deploy Campaign Smoke Test", () => {
-  let campaign : DeployCampaign<IProviderBase, IContractState>;
+  let campaign : DeployCampaign<IDeployCampaignConfig, IContractState>;
   let missionIdentifiers : Array<string>;
   let hardhatMock : HardhatMock;
   let config : any;
@@ -68,7 +67,6 @@ describe("Deploy Campaign Smoke Test", () => {
       hre: hardhatMock,
       signer: signerMock,
       env: "prod",
-      provider: providerMock,
     });
 
     const collectionMock = {
@@ -120,7 +118,7 @@ describe("Deploy Campaign Smoke Test", () => {
       contractsVersion,
     });
 
-    await mongoAdapterMock.initialize(dbVersion);
+    await mongoAdapterMock.initialize();
 
     missionIdentifiers = [
       "noProxy",
@@ -195,7 +193,7 @@ describe("Deploy Campaign Smoke Test", () => {
 
     const state = campaign.state.instances as Record<
     string,
-    ATestDeployMission<IProviderBase, IContractState>
+    ATestDeployMission<IDeployCampaignConfig, IContractState>
     >;
 
     // check proper sequence of methods called
@@ -250,7 +248,7 @@ describe("Deploy Campaign Smoke Test", () => {
 
     const state = campaign.state.instances as Record<
     string,
-    ATestDeployMission<IProviderBase, IContractState>
+    ATestDeployMission<IDeployCampaignConfig, IContractState>
     >;
 
     // make sure verify() and getMonitoringData() are called on all missions

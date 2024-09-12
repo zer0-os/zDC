@@ -1,6 +1,6 @@
 {
   "name": "@zero-tech/zdc",
-  "version": "0.1.3",
+  "version": "0.1.7",
   "description": "Zero Deploy Campaign",
   "author": "Zero CPT",
   "license": "MIT",
@@ -18,7 +18,7 @@
     "clean": "rm -rf dist",
     "build": "yarn clean && tsc",
     "prepare": "yarn build",
-    "lint": "yarn eslint ./src/** --ext .ts",
+    "lint": "yarn eslint .",
     "test": "mocha --require ts-node/register ./test/cases/*.ts"
   },
   "pre-commit": [

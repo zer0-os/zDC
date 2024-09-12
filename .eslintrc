@@ -1,9 +1,11 @@
 {
   "root": true,
+  "ignorePatterns": ["*.js", "*.d.ts"],
   "overrides": [
     {
       "files": ["src/**/*.ts", "test/**/*.ts", "./*.ts"],
-      "extends": ["@zero-tech/eslint-config-cpt/node-ts/.eslintrc.json"],
+      "extends": [
+        "@zero-tech/eslint-config-cpt/node-ts/.eslintrc.json"],
       "rules": {
         "no-unused-expressions": "off",
         "no-console": "off",
@@ -11,6 +13,9 @@
         "@typescript-eslint/no-shadow": "warn",
         "no-invalid-this": "off"
         // "@typescript-eslint/no-unused-vars": "off" // For debugging
+      },
+      "parserOptions": {
+        "project": "./tsconfig.eslint.json"
       }
     }
   ]
