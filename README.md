@@ -98,6 +98,16 @@ SILENT_LOGGER= # if "true" - silence the logger (optional, default: false)
 TENDERLY_ACCESS_KEY= # if integrating with Tenderly, provide an access key (optional)
 TENDERLY_ACCOUNT_ID= # if integrating with Tenderly, provide an account ID (optional)
 TENDERLY_PROJECT_SLUG= # if integrating with Tenderly, provide a project slug (optional)
+# Token
+Z_TOKEN_NAME=
+Z_TOKEN_SYMBOL=
+TOKEN_ADMIN_ADDRESS=
+TOKEN_MINTER_ADDRESS=
+TOKEN_MINT_BENEFICIARY_ADDRESS= # wallet that will receive tokens after contract deploy
+INITIAL_ADMIN_DELAY= # a delay before an administrator can perform an important function or make changes to a contract
+INITIAL_TOKEN_SUPPLY= # the initial number of tokens subject to inflation
+ANNUAL_INFLATION_RATES= # array of yearly inflation rates in basis points. The rates must be provided as a number in the format of whole percentages plus the decimal part without a comma (10% = 1000)
+FINAL_INFLATION_RATE= # the final inflation rate after all the yearly rates have been applied
 ```
 
 Below is an example of how to fully utilize zDC with all its functionality
@@ -185,61 +195,84 @@ export class CoolContractDM extends BaseDeployMission<
   // other potential overrides ...
 }
 ```
-2. Instantiate/initialize all other entities and pass them to the Campaign constructor.
+2. If you need the custom config, you will be able to create and validate this using getZTokenCampaignConfig() function. Otherwise, the campaign will take the env variables you provided in .env file and deployAdmid which is passed as argument.
 ```typescript
-// your own code to get the config with all the data
-// that a Campaign or any individual Missions may need during the deploy run
-const config = getConfig();
+export const getZTokenCampaignConfig = ({
+  env,
+  deployAdmin,
+} : {
+  env ?: string;
+  deployAdmin : SignerWithAddress;
+}) : IZTokenCampaignConfig => ...
+```
+3. Instantiate/initialize all other entities and pass them as an array to the createDeployCampaign function.
+```typescript
+export const createDeployCampaign = async <
+  H extends IHardhatBase,
+  S extends ISignerBase,
+  C extends IDeployCampaignConfig<S>,
+  St extends IContractState,
+> ({
+  hre,
+  config,
+  missions,
+  deployer,
+  logger,
+  dbAdapter,
+  contractsVersion,
+} : {
+  hre : H;
+  config : C;
+  missions : Array<TDeployMissionCtor<H, S, C, St>>;
+  deployer ?: HardhatDeployer<H, S>;
+  logger ?: TLogger;
+  dbAdapter ?: MongoDBAdapter;
+  contractsVersion ?: string;
+}) =>  {
 
-const logger = getLogger();
+  // initialize logger if it's not passed
+  if (!logger) logger = getLogger();
 
-deployer = new HardhatDeployer({
-    hre,
-    signer: config.deployAdmin,
-    env: config.env,
-    provider,
-});
+  // initialize HardhatDeployer based on passed vars
+  if (!deployer) {
+    deployer = new HardhatDeployer({
+      hre,
+      signer: config.deployAdmin,
+      env: config.env,
+    });
+  }
 
-// initialize MongoDBAdapter class based on your local ENV vars
-const dbAdapter = await getMongoAdapter();
+  // initialize MongoDBAdapter class based on your local ENV vars
+  if (!dbAdapter) dbAdapter = await getMongoAdapter({
+    logger,
+    contractsVersion,
+  });
 
-const campaign = new DeployCampaign<
-  HardhatRuntimeEnvironment,
-  YourSignerType,
-  YourProviderType,
   // an interface of all your contract instance names mapped
   // to their Typechain classes
   // the Campaign's `state.contracts` will represent an object
   // where each of your deployed contracts is returned as a callable
   // Contract with methods from Typechain
-  {
-    coolContract: CoolContract,
-    anotherContract: AnotherContract,
-    oneMoreContract: OneMoreContract,
-  }
->({
-  // all the Deploy Mission classes for every contract you are deploying
-  // the Campaign will instantiate and call them when required
-  missions: [
-    CoolContractDM,
-    AnotherContractDM,
-    OneMoreContractDM,
-  ],
-  deployer,
-  dbAdapter,
-  logger,
+  return new DeployCampaign<H, S, C, St>({
+    // all the Deploy Mission classes for every contract you are deploying
+    // the Campaign will instantiate and call them when required
+    missions,
+    deployer,
+    dbAdapter,
+    logger,
+    config,
+  });
+};
+```
+4. Run the execution of the previously collected campaign using the runZTokenCampaign() function. You may provide the custom config as argument. 
+```typescript
+export const runZTokenCampaign = async ({
+  deployAdmin,
   config,
-});
-```
-3. Execute the Campaign.
-```typescript
-await campaign.execute();
-```
-4. Finalize the DB version by switching its type from `TEMP` to `DEPLOYED`.
-```typescript
-// passing a specific version is optional, it is recommended to leave it out
-// then DBVersioner will use the version that was used during the Campaign execution
-await dbAdapter.finalize(dbVersion);
+} : {
+  deployAdmin ?: SignerWithAddress;
+  config ?: IZTokenCampaignConfig;
+} = {}) => ...
 ```
 
 After the Campaign is done, but while its instance still exists, you can access any of the deployed contracts
