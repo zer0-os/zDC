@@ -98,16 +98,6 @@ SILENT_LOGGER= # if "true" - silence the logger (optional, default: false)
 TENDERLY_ACCESS_KEY= # if integrating with Tenderly, provide an access key (optional)
 TENDERLY_ACCOUNT_ID= # if integrating with Tenderly, provide an account ID (optional)
 TENDERLY_PROJECT_SLUG= # if integrating with Tenderly, provide a project slug (optional)
-# Token
-Z_TOKEN_NAME=
-Z_TOKEN_SYMBOL=
-TOKEN_ADMIN_ADDRESS=
-TOKEN_MINTER_ADDRESS=
-TOKEN_MINT_BENEFICIARY_ADDRESS= # wallet that will receive tokens after contract deploy
-INITIAL_ADMIN_DELAY= # a delay before an administrator can perform an important function or make changes to a contract
-INITIAL_TOKEN_SUPPLY= # the initial number of tokens subject to inflation
-ANNUAL_INFLATION_RATES= # array of yearly inflation rates in basis points. The rates must be provided as a number in the format of whole percentages plus the decimal part without a comma (10% = 1000)
-FINAL_INFLATION_RATE= # the final inflation rate after all the yearly rates have been applied
 ```
 
 Below is an example of how to fully utilize zDC with all its functionality
