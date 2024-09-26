@@ -27,7 +27,7 @@ export class DBVersioner {
     }
 
     this.curDbVersion = dbVersion;
-    this.archiveCurrentDeployed = !!archive;
+    this.archiveCurrentDeployed =  archive !== undefined ? archive : true;
     this.logger = logger;
 
     this.versions = {} as Collection<IDBVersion>;
@@ -57,29 +57,6 @@ export class DBVersioner {
       }
     } else {
       if (!tempV) {
-        // what to do with the current DEPLOYED version
-        if (this.archiveCurrentDeployed) {
-          this.logger.debug("Archiving enabled - Archiving current DEPLOYED DB version...");
-          // TODO upg: fix this to only archive after the upgrade is done
-          //  in finalize() method
-          // archive the current DEPLOYED version
-          await this.versions.updateOne(
-            {
-              type: VERSION_TYPES.deployed,
-            },
-            {
-              $set: {
-                type: VERSION_TYPES.archived,
-              },
-            });
-        } else {
-          if (deployedV) {
-            // get the current DEPLOYED and clear DB for that version
-            this.logger.debug("Archiving disabled - Clearing current DEPLOYED DB version...");
-            await this.clearDBForVersion(deployedV.dbVersion, db);
-          }
-        }
-
         // create new TEMP version
         finalVersion = Date.now().toString();
         // eslint-disable-next-line max-len
@@ -102,16 +79,27 @@ export class DBVersioner {
 
     const deployedV = (await this.getDeployedVersion())?.dbVersion;
     if (finalV !== deployedV) {
-      // archive the current DEPLOYED version
-      await this.versions.updateOne(
-        {
-          type: VERSION_TYPES.deployed,
-        },
-        {
-          $set: {
-            type: VERSION_TYPES.archived,
+      if (this.archiveCurrentDeployed) {
+        this.logger.debug("Archiving enabled - Archiving current DEPLOYED DB version...");
+
+        // archive the previous DEPLOYED version
+        await this.versions.updateOne(
+          {
+            type: VERSION_TYPES.deployed,
+            dbVersion: deployedV,
           },
-        });
+          {
+            $set: {
+              type: VERSION_TYPES.archived,
+            },
+          });
+      } else {
+        if (deployedV) {
+          // get the previous DEPLOYED and clear DB for that version
+          this.logger.debug("Archiving disabled - Clearing current DEPLOYED DB version...");
+          await this.clearDBForVersion(deployedV);
+        }
+      }
 
       // create new DEPLOYED version
       await this.versions.insertOne({

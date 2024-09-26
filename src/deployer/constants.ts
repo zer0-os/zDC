@@ -1,4 +1,4 @@
-import { IRedeployImplementationOpts, TRedeployImplementationOpt } from "./types";
+import { IRedeployImplementationOpts } from "./types";
 import { IProxyKinds } from "../missions";
 
 export interface INetworkData {
