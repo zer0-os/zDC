@@ -1,16 +1,24 @@
 // eslint-disable-next-line max-len
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function, @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
-import { Db, DbOptions, MongoClient, MongoClientOptions } from "mongodb";
 import assert from "assert";
 import {
-  DBVersioner, DeployCampaign,
+  DBVersioner,
+  DeployCampaign,
   HardhatDeployer,
-  IContractState, IDeployCampaignConfig,
-  IHardhatBase, ISignerBase, MongoDBAdapter,
-  TLogger,
+  IContractState,
+  IDeployCampaignConfig,
+  IHardhatBase,
+  ISignerBase,
+  MongoDBAdapter,
 } from "../../src";
-import { ATestDeployMission, makeMissionMock } from "../mocks/missions";
+import {
+  ATestDeployMission,
+  testMissions
+} from "../mocks/missions";
 import { HardhatMock } from "../mocks/hardhat";
+import { MongoClientMock } from "../mocks/mongo";
+import { loggerMessages, loggerMock } from "../mocks/logger";
+import { signerMock } from "../mocks/accounts";
 
 
 describe("Deploy Campaign Smoke Test", () => {
@@ -18,7 +26,6 @@ describe("Deploy Campaign Smoke Test", () => {
   let missionIdentifiers : Array<string>;
   let hardhatMock : HardhatMock;
   let config : any;
-  let loggerMessages : Array<string>;
 
   before(async () => {
     config = {
@@ -34,75 +41,13 @@ describe("Deploy Campaign Smoke Test", () => {
       },
     };
 
-    loggerMessages = [];
-
-    const loggerMock = {
-      info: (msg : string) => {
-        loggerMessages.push(msg);
-      },
-      error: () => {},
-      debug: () => {},
-      log: () => {},
-    } as unknown as TLogger;
-
     hardhatMock = new HardhatMock();
-
-    const providerMock = {
-      waitForTransaction: async (
-        txHash : string,
-        confirmations ?: number | undefined,
-        timeout ?: number | undefined
-      ) => Promise.resolve({
-        contractAddress: "0xcontractAddress",
-      }),
-    };
-
-    const signerMock = {
-      getAddress: async () => Promise.resolve("0xsignerAddress"),
-      address: "0xsignerAddress",
-    };
 
     const deployer = new HardhatDeployer({
       hre: hardhatMock,
       signer: signerMock,
       env: "prod",
     });
-
-    const collectionMock = {
-      insertOne: async () => Promise.resolve(),
-      findOne: async (args : any) => {
-        if (args.type) {
-          return {
-            dbVersion: "109381236293746234",
-          };
-        }
-      },
-      updateOne: async () => Promise.resolve(),
-      deleteMany: async () => Promise.resolve(),
-      deleteOne: async () => Promise.resolve(),
-    };
-
-    const dbMock = {
-      collection: () => (collectionMock),
-    };
-
-    class MongoClientMock extends MongoClient {
-      constructor (dbUri : string, clientOpts : MongoClientOptions) {
-        super(dbUri, clientOpts);
-      }
-
-      async connect () {
-        return Promise.resolve(this);
-      }
-
-      db (dbName ?: string | undefined, options ?: DbOptions | undefined) {
-        return dbMock as unknown as Db;
-      }
-
-      async close (force ?: boolean) {
-        await Promise.resolve();
-      }
-    }
 
     const contractsVersion = "1.7.9";
     const dbVersion = "109381236293746234";
@@ -131,24 +76,12 @@ describe("Deploy Campaign Smoke Test", () => {
       false,
     ];
 
-    const testMissions = missionIdentifiers.map(
-      (id, idx) => makeMissionMock({
-        _contractName: `Contract${id}`,
-        _instanceName: `${id}`,
-        _deployArgs: [
-          `arg${id}1`,
-          `arg${id}2`,
-        ],
-        _isProxy: id.includes("proxy"),
-        _needsPostDeploy: id === missionIdentifiers[2],
-        _postDeployCb: async () => {
-          postDeployRun[idx] = true;
-        },
-      }));
-
     campaign = new DeployCampaign({
       logger: loggerMock,
-      missions: testMissions,
+      missions: testMissions(
+        missionIdentifiers,
+        postDeployRun
+      ),
       deployer,
       dbAdapter: mongoAdapterMock,
       config,
