@@ -10,6 +10,8 @@ import { IContractState, IDeployCampaignConfig, TLogger } from "../campaign/type
 import { IContractDbData } from "../db/types";
 import { NetworkData } from "../deployer/constants";
 import { Contract } from "ethers";
+import { UpgradeOps } from "./constants";
+import { bytecodesMatch } from "../utils/bytecode";
 
 
 export class BaseDeployMission <
@@ -47,7 +49,7 @@ export class BaseDeployMission <
       throw new Error("No deployed version found in DB. This method should be run in upgrade mode only, and the 'DEPLOYED' DB version should exist already from the previous deploy.");
     }
 
-    return this.campaign.dbAdapter.getContract(this.contractName, deployedVersionDoc.dbVersion);
+    return this.campaign.dbAdapter.getContract(this.dbName, deployedVersionDoc.dbVersion);
   }
 
   async getLatestFromDB () {
@@ -138,6 +140,51 @@ export class BaseDeployMission <
 
   async postDeploy () {
     return Promise.resolve();
+  }
+
+  async getUpgradeOperation () {
+    const newContract = await this.getLatestFromDB();
+    const deployedContract = await this.getDeployedFromDB();
+
+    // checking this first to know if this contract has been deployed previously
+    // if not - we just deploy the new one
+    if (!deployedContract) {
+      return UpgradeOps.deploy;
+    }
+
+    // if deployedContract is in DB, but newContract is not in DB yet
+    // we need to compare them
+    if (!newContract) {
+      if (!this.proxyData.isProxy) return UpgradeOps.copy;
+
+      // compare bytecodes against the DB
+      const { bytecode: bytecodeInDB } = deployedContract;
+      const bytecodeFromChain = await this.campaign.deployer.getBytecodeFromChain(deployedContract.address);
+      const { bytecode: curBytecode } = this.campaign.deployer.getContractArtifact(this.contractName);
+      const match = bytecodesMatch(bytecodeInDB, curBytecode);
+      const match2 = bytecodesMatch(bytecodeFromChain, curBytecode);
+      const match3 = bytecodesMatch(bytecodeFromChain, bytecodeInDB);
+
+      // TODO upg: MAKE SURE THIS WORKS PROPERLY IN THE UPGRADES PACKAGE
+      //  AND THE CONTRACT IS NOT DEPLOYED IN THE UPGRADE FLOW IF BYTECODES ARE THE SAME !!!
+      //  IF IT DOESN'T, WE NEED OUR OWN WAY TO COMPARE BYTECODES
+      if (!match) return UpgradeOps.upgrade;
+
+      return UpgradeOps.copy;
+
+      // TODO upg: possibly add a check for the RedeployImplementationOpt set for each mission
+      //  as a prop akin to `proxyData`
+      //  some contracts never need to be redeployed, some may always need redeploy and most are `onchange`
+      //  this can be set by default in this mission and overriden by child missions
+    }
+
+    // if both of them exist and their addresses are the same (proxies),
+    // we don't do anything
+    if (newContract.address === deployedContract.address) {
+      return UpgradeOps.keep;
+    } else {
+      throw new Error("Unknown state of deployment.");
+    }
   }
 
   async execute () {

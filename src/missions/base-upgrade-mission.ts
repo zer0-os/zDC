@@ -1,51 +1,21 @@
 import { BaseDeployMission } from "./base-deploy-mission";
 import { IContractState, IDeployCampaignConfig } from "../campaign";
 import { UpgradeOps } from "./constants";
-import { IContractDbData } from "../db";
+import { IContractDbData, IDBVersion } from "../db";
 
 
 export class BaseUpgradeMission <
   C extends IDeployCampaignConfig,
   St extends IContractState,
 > extends BaseDeployMission<C, St> {
-  async getUpgradeOperation () {
-    const newContract = await this.getLatestFromDB();
-    const deployedContract = await this.getDeployedFromDB();
-
-    // checking this first to know if this contract has been deployed previously
-    // if not - we just deploy the new one
-    if (!deployedContract) {
-      return UpgradeOps.deploy;
-    }
-
-    // if deployedContract is in DB, but newContract is not in DB yet
-    // we need to compare them
-    if (!newContract) {
-      // TODO upg: MAKE SURE THIS WORKS PROPERLY IN THE UPGRADES PACKAGE
-      //  AND THE CONTRACT IS NOT DEPLOYED IN THE UPGRADE FLOW IF BYTECODES ARE THE SAME !!!
-      //  IF IT DOESN'T, WE NEED OUR OWN WAY TO COMPARE BYTECODES
-      return UpgradeOps.upgrade;
-
-      // TODO upg: possibly add a check for the RedeployImplementationOpt set for each mission
-      //  as a prop akin to `proxyData`
-      //  some contracts never need to be redeployed, some may always need redeploy and most are `onchange`
-      //  this can be set by default in this mission and overriden by child missions
-    }
-
-    // if both of them exist and their addresses are the same (proxies),
-    // we don't do anything
-    if (newContract.address === deployedContract.address) {
-      return UpgradeOps.keep;
-    } else {
-      throw new Error("Unknown state of deployment.");
-    }
-  }
-
-  // TODO upg: this is currently NOT used. remove it if it's not needed
   async dbCopy () {
     const deployedContract = await this.getDeployedFromDB();
     delete deployedContract?.version;
-    await this.campaign.dbAdapter.writeContract(this.contractName, (deployedContract as IContractDbData));
+    // @ts-ignore
+    delete deployedContract?._id;
+    // TODO upg: fix this write method on db adapter to write contract with a proper version!
+    const { dbVersion: tempV } = await this.campaign.dbAdapter.versioner.getTempVersion() as IDBVersion;
+    await this.campaign.dbAdapter.writeContract(this.contractName, (deployedContract as IContractDbData), tempV);
     this.logger.debug(`${this.contractName} data is copied to the newest version of the DB...`);
   }
 
