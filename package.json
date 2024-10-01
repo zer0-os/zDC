@@ -36,7 +36,7 @@
     "hardhat": "^2.22.10",
     "@openzeppelin/hardhat-upgrades": "^3.2.1",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
-    "@zero-tech/eslint-config-cpt": "0.2.7",
+    "@zero-tech/eslint-config-cpt": "0.2.8",
     "eslint": "^8.56.0",
     "mocha": "^10.2.0",
     "ts-node": "10.9.1",
