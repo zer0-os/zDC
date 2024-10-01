@@ -13,7 +13,7 @@ import {
 } from "../../src";
 import {
   ATestDeployMission,
-  testMissions
+  testMissions,
 } from "../mocks/missions";
 import { HardhatMock } from "../mocks/hardhat";
 import { MongoClientMock } from "../mocks/mongo";

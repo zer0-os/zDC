@@ -3,28 +3,29 @@ import {
   IContractArtifact,
   IContractFactoryBase,
   IContractV6,
-  IHardhatBase, IHHSubtaskArguments, ISignerBase,
+  IHardhatBase,
+  IHHSubtaskArguments,
   TDeployArgs,
   THHTaskArguments,
   TProxyKind,
 } from "../../src";
 
 
-const contractMock = {
-  target: "0xcontractAddress",
-  getAddress: async () => Promise.resolve("0xcontractAddress"),
-  waitForDeployment: async () => Promise.resolve(contractMock),
+const contractMock = (name : string) => ({
+  target: `0xcontractAddress_${name}`,
+  getAddress: async () => Promise.resolve(`0xcontractAddress_${name}`),
+  waitForDeployment: async () => Promise.resolve(contractMock(name)),
   deploymentTransaction: () => ({
-    hash: "0xhash",
+    hash: `0xhash_${name}`,
   }),
   interface: {},
-} as IContractV6;
+} as unknown as IContractV6);
 
-export const contractFactoryMock = {
-  deploy: async () => Promise.resolve(contractMock),
-  attach: async () => Promise.resolve(contractMock),
-  contractName: "",
-} as unknown as IContractFactoryBase;
+export const contractFactoryMock = (name : string) => ({
+  deploy: async () => Promise.resolve(contractMock(name)),
+  attach: async () => Promise.resolve(contractMock(name)),
+  contractName: name,
+} as unknown as IContractFactoryBase);
 
 export interface IExecutedCall {
   methodName : string;
@@ -40,7 +41,7 @@ export class HardhatMock implements IHardhatBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (contractName : string, signerOrOptions : any) : Promise<F> => (
       {
-        ...contractFactoryMock,
+        ...contractFactoryMock(contractName),
         contractName,
       }
     ) as unknown as Promise<F>,
@@ -60,7 +61,7 @@ export class HardhatMock implements IHardhatBase {
         args: { contractName: factory.contractName, args, kind: options.kind },
       });
 
-      return contractMock as unknown as Promise<IContractV6>;
+      return contractMock(factory.contractName) as unknown as Promise<IContractV6>;
     },
     erc1967: {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

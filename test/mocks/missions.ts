@@ -10,22 +10,20 @@ import {
 import { IExecutedCall } from "./hardhat";
 
 export const testMissions = (
-  missionIdentifiers: string[],
-  postDeployRun: boolean[]
-) => {
-  return missionIdentifiers.map((id, idx) =>
-    makeMissionMock({
-      _contractName: `Contract${id}`,
-      _instanceName: `${id}`,
-      _deployArgs: [`arg${id}1`, `arg${id}2`],
-      _isProxy: id.includes("proxy"),
-      _needsPostDeploy: id === missionIdentifiers[2],
-      _postDeployCb: async () => {
-        postDeployRun[idx] = true;
-      },
-    })
-  );
-};
+  missionIdentifiers : Array<string>,
+  postDeployRun : Array<boolean>
+) => missionIdentifiers.map((id, idx) =>
+  makeMissionMock({
+    _contractName: `Contract_${id}`,
+    _instanceName: `${id}`,
+    _deployArgs: [`arg_${id}1`, `arg_${id}2`],
+    _isProxy: id.includes("proxy"),
+    _needsPostDeploy: id === missionIdentifiers[2],
+    _postDeployCb: async () => {
+      postDeployRun[idx] = true;
+    },
+  })
+);
 
 export const makeTestMissionProxy = (mission : any) => new Proxy(mission, {
   get: (target, prop) => {
