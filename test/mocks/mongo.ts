@@ -10,12 +10,11 @@ export const collectionMock = {
     }
   ) => {
     if (
-      args.name === "needsDeploy" &&
-      args.type === "TEMP"
+      args.name === "Contract_deployed"
     ) {
       return {
-        name: "needsDeploy",
-        address: "0xaddress_Contract_needsDeploy",
+        name: `${args.name}`,
+        address: `0xaddress_${args.name}`,
         abi: "[]",
         bytecode: "0xbytecode",
         implementation: null,

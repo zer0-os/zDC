@@ -20,7 +20,7 @@ import { MongoClientMock } from "../mocks/mongo";
 // const expect = chai.expect;
 
 
-describe.only("Base deploy mission", () => {
+describe("Base deploy mission", () => {
   let campaign : DeployCampaign<IHardhatBase, ISignerBase, IDeployCampaignConfig<ISignerBase>, IContractState>;
   let hardhatMock : HardhatMock;
   let missionIdentifiers : Array<string>;
@@ -72,7 +72,7 @@ describe.only("Base deploy mission", () => {
     missionIdentifiers = [
       "buildObject",
       "needsDeploy",
-      "nonDeploy",
+      "deployed",
       "proxyPost",
     ];
 
@@ -96,8 +96,40 @@ describe.only("Base deploy mission", () => {
     await campaign.execute();
   });
 
-  describe("#saveToDB", () => {
-    it("Should build correct object of contract and call insertOne()", async () => {
+  describe("#deploy()", () => {
+    it("Should deploy all contracts from `missionIdentifiers`", async () => {
+      for (const mission of missionIdentifiers) {
+        assert.equal(
+          await campaign.state.contracts[mission].getAddress(),
+          `0xcontractAddress_Contract_${mission}`
+        );
+        // does it make sense to do this?
+        assert.deepEqual(
+          await campaign.state.instances[mission].deployArgs(),
+          [`arg_${mission}1`, `arg_${mission}2`]
+        );
+      }
+    });
+
+    it("#savetoDB() Should call saveToDB() when deploy a contract", async () => {
+      for (const mission of missionIdentifiers) {
+        assert.equal(
+          // @ts-ignore
+          await campaign.state.instances[mission].called.includes("saveToDB"),
+          true
+        );
+      }
+    });
+
+    it("", async () => {});
+  });
+
+  describe("Minor methods", () => {
+    it("#deployArgs() Should return correct deploy arguments", async () => {
+      await campaign.state.instances.deployed.deployArgs();
+    });
+
+    it("#buildObject() Should build correct object of contract and call insertOne()", async () => {
       const {
         buildObject,
       } = campaign.state.instances;
@@ -124,11 +156,25 @@ describe.only("Base deploy mission", () => {
   });
 
   describe("#needsDeploy()",() => {
-    it("Should return false, because it found itself", async () => {
+    it("Should return false, because it found itself in db", async () => {
       assert.equal(
-        await campaign.state.instances.needsDeploy.needsDeploy(),
+        await campaign.state.instances.deployed.needsDeploy(),
         false
       );
+    });
+
+    it("Should return true, because it's missing in db", async () => {
+      assert.equal(
+        await campaign.state.instances.needsDeploy.needsDeploy(),
+        true
+      );
+    });
+
+    it("Should update state contract when contract found in db", async () => {
+      // assert.equal(
+      //   await campaign.state.instances.deployed.needsDeploy(),
+      //   false
+      // );
     });
   });
 });

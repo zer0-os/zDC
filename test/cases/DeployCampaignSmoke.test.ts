@@ -100,7 +100,7 @@ describe("Deploy Campaign Smoke Test", () => {
     assert.equal(Object.keys(instances).length, missionIdentifiers.length);
 
     missionIdentifiers.forEach(id => {
-      assert.equal(instances[id].contractName, `Contract${id}`);
+      assert.equal(instances[id].contractName, `Contract_${id}`);
       assert.equal(instances[id].instanceName, id);
       assert.equal(instances[id].proxyData.isProxy, id.includes("proxy"));
     });
