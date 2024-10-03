@@ -8,17 +8,6 @@ export class BaseUpgradeMission <
   C extends IDeployCampaignConfig,
   St extends IContractState,
 > extends BaseDeployMission<C, St> {
-  async dbCopy () {
-    const deployedContract = await this.getDeployedFromDB();
-    delete deployedContract?.version;
-    // @ts-ignore
-    delete deployedContract?._id;
-    // TODO upg: fix this write method on db adapter to write contract with a proper version!
-    const { dbVersion: tempV } = await this.campaign.dbAdapter.versioner.getTempVersion() as IDBVersion;
-    await this.campaign.dbAdapter.writeContract(this.contractName, (deployedContract as IContractDbData), tempV);
-    this.logger.debug(`${this.contractName} data is copied to the newest version of the DB...`);
-  }
-
   async upgrade () {
     this.logger.info(`Upgrading ${this.contractName}...`);
 
@@ -59,12 +48,8 @@ export class BaseUpgradeMission <
     return Promise.resolve();
   }
 
-  async execute () {
-    if (!this.config.upgrade) {
-      return super.execute();
-    }
-
-    const op = await this.getUpgradeOperation();
+  async executeUpgrade () {
+    const op = await this.getContractOperation();
 
     switch (op) {
     case UpgradeOps.deploy:

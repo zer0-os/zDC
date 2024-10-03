@@ -12,6 +12,7 @@ import { NetworkData } from "../deployer/constants";
 import { Contract } from "ethers";
 import { UpgradeOps } from "./constants";
 import { bytecodesMatch } from "../utils/bytecode";
+import { IDBVersion } from "../db";
 
 
 export class BaseDeployMission <
@@ -66,6 +67,17 @@ export class BaseDeployMission <
     const contractDbDoc = await this.buildDbObject(contract, this.implAddress);
 
     return this.campaign.dbAdapter.writeContract(this.dbName, contractDbDoc);
+  }
+
+  async dbCopy () {
+    const deployedContract = await this.getDeployedFromDB();
+    delete deployedContract?.version;
+    // @ts-ignore
+    delete deployedContract?._id;
+    // TODO upg: fix this write method on db adapter to write contract with a proper version!
+    const { dbVersion: tempV } = await this.campaign.dbAdapter.versioner.getTempVersion() as IDBVersion;
+    await this.campaign.dbAdapter.writeContract(this.contractName, (deployedContract as IContractDbData), tempV);
+    this.logger.debug(`${this.contractName} data is copied to the newest version of the DB...`);
   }
 
   async needsDeploy () {
@@ -142,7 +154,7 @@ export class BaseDeployMission <
     return Promise.resolve();
   }
 
-  async getUpgradeOperation () {
+  async getContractOperation () {
     const newContract = await this.getLatestFromDB();
     const deployedContract = await this.getDeployedFromDB();
 
@@ -160,7 +172,7 @@ export class BaseDeployMission <
       // compare bytecodes against the DB
       const { bytecode: bytecodeInDB } = deployedContract;
       const bytecodeFromChain = await this.campaign.deployer.getBytecodeFromChain(deployedContract.address);
-      const { bytecode: curBytecode } = this.campaign.deployer.getContractArtifact(this.contractName);
+      const { bytecode: curBytecode } = this.getArtifact();
       const match = bytecodesMatch(bytecodeInDB, curBytecode);
       const match2 = bytecodesMatch(bytecodeFromChain, curBytecode);
       const match3 = bytecodesMatch(bytecodeFromChain, bytecodeInDB);
@@ -187,7 +199,31 @@ export class BaseDeployMission <
     }
   }
 
-  async execute () {
+  async executeUpgrade () {
+    const op = await this.getContractOperation();
+
+    switch (op) {
+    case UpgradeOps.deploy:
+      await this.executeDeploy();
+      break;
+    case UpgradeOps.copy:
+      await this.dbCopy();
+      break;
+    case UpgradeOps.upgrade:
+      throw new Error(
+        // eslint-disable-next-line max-len
+        `Contract ${this.contractName} source code differs, but it does not use BaseUpgradeMission, so it can not be upgraded.
+        This is an error and needs to be addressed!`
+      );
+    case UpgradeOps.keep:
+      // TODO upg: do we need any logic here ?
+      break;
+    default:
+      throw new Error(`Deploy operation ${op} is not supported.`);
+    }
+  }
+
+  async executeDeploy () {
     if (await this.needsDeploy()) {
       await this.deploy();
     } else {
@@ -197,6 +233,12 @@ export class BaseDeployMission <
     if (await this.needsPostDeploy()) {
       await this.postDeploy();
     }
+  }
+
+  async execute () {
+    if (this.config.upgrade) return this.executeUpgrade();
+
+    return this.executeDeploy();
   }
 
   async verify () {
