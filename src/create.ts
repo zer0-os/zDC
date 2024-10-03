@@ -1,14 +1,12 @@
 import { getLogger } from "./logger/create-logger";
-import { HardhatDeployer, IHardhatBase, ISignerBase } from "./deployer";
+import { HardhatDeployer, HardhatExtended } from "./deployer";
 import { DeployCampaign, IContractState, IDeployCampaignConfig, TLogger } from "./campaign";
 import { getMongoAdapter, MongoDBAdapter } from "./db";
 import { TDeployMissionCtor } from "./missions";
 
 
 export const createDeployCampaign = async <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  C extends IDeployCampaignConfig<S>,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > ({
   hre,
@@ -19,10 +17,10 @@ export const createDeployCampaign = async <
   dbAdapter,
   contractsVersion,
 } : {
-  hre : H;
+  hre : HardhatExtended;
   config : C;
-  missions : Array<TDeployMissionCtor<H, S, C, St>>;
-  deployer ?: HardhatDeployer<H, S>;
+  missions : Array<TDeployMissionCtor<C, St>>;
+  deployer ?: HardhatDeployer;
   logger ?: TLogger;
   dbAdapter ?: MongoDBAdapter;
   contractsVersion ?: string;
@@ -42,7 +40,7 @@ export const createDeployCampaign = async <
     contractsVersion,
   });
 
-  return new DeployCampaign<H, S, C, St>({
+  return new DeployCampaign<C, St>({
     missions,
     deployer,
     dbAdapter,

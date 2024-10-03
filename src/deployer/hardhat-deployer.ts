@@ -1,28 +1,26 @@
-import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
+import { ITenderlyContractData, TDeployArgs } from "../missions/types";
 import axios from "axios";
-import { IContractV6 } from "../campaign/types";
-import { IHardhatBase, ISignerBase, IHardhatDeployerArgs } from "./types";
+import { IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
+import { Contract, ContractFactory } from "ethers";
+import { UpgradeProxyOptions } from "@openzeppelin/hardhat-upgrades/dist/utils";
 
 
-export class HardhatDeployer <
-  H extends IHardhatBase,
-  S extends ISignerBase
-> {
-  hre : H;
-  signer : S;
+export class HardhatDeployer {
+  hre : HardhatExtended;
+  signer : TSigner;
   env : string;
 
   constructor ({
     hre,
     signer,
     env,
-  } : IHardhatDeployerArgs<H, S>) {
+  } : IHardhatDeployerArgs) {
     this.hre = hre;
     this.signer = signer;
     this.env = env;
   }
 
-  async getFactory (contractName : string, signer ?: S) {
+  async getFactory (contractName : string, signer ?: TSigner) {
     const attachedSigner = signer ?? this.signer;
     return this.hre.ethers.getContractFactory(contractName, attachedSigner);
   }
@@ -36,29 +34,39 @@ export class HardhatDeployer <
   async deployProxy ({
     contractName,
     args,
-    kind,
+    opts,
   } : {
     contractName : string;
     args : TDeployArgs;
-    kind : TProxyKind;
-  }) : Promise<IContractV6> {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    opts : UpgradeProxyOptions;
+  }) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const deployment = await this.hre.upgrades!.deployProxy(contractFactory, args, {
-      kind,
-    });
+    const deployment = await this.hre.upgrades.deployProxy(contractFactory, args, opts);
 
     return deployment.waitForDeployment();
   }
 
-  async deployContract (contractName : string, args : TDeployArgs) : Promise<IContractV6> {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+  async deployContract (contractName : string, args : TDeployArgs) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
     const deployment = await contractFactory.deploy(...args);
 
+    return deployment.waitForDeployment();
+  }
+
+  async upgradeProxy (
+    contractName : string,
+    contractAddress : string,
+    upgradeOpts : UpgradeProxyOptions,
+  ) {
+    const contractFactory = await this.getFactory(contractName);
+
+    const deployment = await this.hre.upgrades.upgradeProxy(
+      contractAddress,
+      contractFactory,
+      upgradeOpts,
+    );
+
+    // TODO upg: is this going to be the same flow for upgrade as for deploy?
     return deployment.waitForDeployment();
   }
 
@@ -68,7 +76,7 @@ export class HardhatDeployer <
 
   async getProxyImplAddress (proxyContract : string) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.hre.upgrades!.erc1967.getImplementationAddress(proxyContract);
+    return this.hre.upgrades.erc1967.getImplementationAddress(proxyContract);
   }
 
   async getBytecodeFromChain (address : string) {
