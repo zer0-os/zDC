@@ -67,15 +67,6 @@ export class HardhatDeployer {
     );
 
     // TODO upg: is this going to be the same flow for upgrade as for deploy?
-    return this.awaitDeployment(contractName, deployment, contractFactory);
-  }
-
-  // TODO upg: remove this function if not needed!
-  async awaitDeployment (
-    contractName : string,
-    deployment : Contract,
-    factory : ContractFactory,
-  ) : Promise<Contract> {
     return deployment.waitForDeployment();
   }
 
