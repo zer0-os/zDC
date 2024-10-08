@@ -8,7 +8,7 @@ import { loggerMock } from "../mocks/logger";
 import { dbMock, MongoClientMock } from "../mocks/mongo";
 
 
-describe.only("DB versioner", function () {
+describe("DB versioner", function () {
   this.timeout(5000);
 
   let mongoAdapter : MongoDBAdapter;
