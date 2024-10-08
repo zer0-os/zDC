@@ -14,17 +14,17 @@ import { loggerMock } from "../mocks/logger";
 import { testMissions } from "../mocks/missions";
 import { MongoClientMock } from "../mocks/mongo";
 
-// // imported it using es5. It doesn't allow me to do it any other way.
-// // eslint-disable-next-line @typescript-eslint/no-var-requires
-// const chai = require("chai");
-// const expect = chai.expect;
 
+// this.timeout() doesn't work for arrow functions.
+describe("Base deploy mission", function () {
+  this.timeout(5000);
 
-describe("Base deploy mission", () => {
   let campaign : DeployCampaign<IHardhatBase, ISignerBase, IDeployCampaignConfig<ISignerBase>, IContractState>;
   let hardhatMock : HardhatMock;
   let missionIdentifiers : Array<string>;
+
   // it has any type in the DeployCampaign class
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let config : any;
 
   before(async () => {
@@ -84,7 +84,7 @@ describe("Base deploy mission", () => {
 
     campaign = new DeployCampaign({
       logger: loggerMock,
-      missions: testMissions(
+      missions: await testMissions(
         missionIdentifiers,
         postDeployRun
       ),
@@ -111,22 +111,63 @@ describe("Base deploy mission", () => {
       }
     });
 
-    it("#savetoDB() Should call saveToDB() when deploy a contract", async () => {
+    it("#savetoDB() Should call `saveToDB()` when deploy a contract", async () => {
       for (const mission of missionIdentifiers) {
-        assert.equal(
-          // @ts-ignore
-          await campaign.state.instances[mission].called.includes("saveToDB"),
-          true
-        );
+        if (mission !== "deployed") {
+          assert.equal(
+            // ts complains about `called` prop
+            // @ts-ignore
+            await campaign.state.instances[mission].called.includes("saveToDB"),
+            true
+          );
+        }
       }
     });
-
-    it("", async () => {});
   });
 
   describe("Minor methods", () => {
     it("#deployArgs() Should return correct deploy arguments", async () => {
-      await campaign.state.instances.deployed.deployArgs();
+      for (const mission of missionIdentifiers) {
+        await campaign.state.instances[mission].deployArgs();
+      }
+    });
+
+    it("#updateStateContract() Should update state contract when deploys the contracts", async () => {
+      const state = await campaign.state.contracts;
+
+      for (const mission of missionIdentifiers) {
+        const contract = state[mission];
+
+        assert.strictEqual(
+          typeof contract.deploymentTransaction,
+          "function",
+          "Not a contract. Method 'deploymentTransaction' should exist"
+        );
+
+        assert.strictEqual(
+          typeof contract.getAddress,
+          "function",
+          "Not a contract. Method 'getAddress' should exist"
+        );
+
+        assert.strictEqual(
+          typeof contract.interface,
+          "object",
+          "Not a contract. Property 'interface' should exist"
+        );
+
+        assert.strictEqual(
+          typeof contract.target,
+          "string",
+          "Not a contract. Property 'target' should exist and be an address"
+        );
+
+        assert.strictEqual(
+          typeof contract.waitForDeployment,
+          "function",
+          "Not a contract. Function 'waitForDeployment' should exist"
+        );
+      }
     });
 
     it("#buildObject() Should build correct object of contract and call insertOne()", async () => {
@@ -156,25 +197,18 @@ describe("Base deploy mission", () => {
   });
 
   describe("#needsDeploy()",() => {
-    it("Should return false, because it found itself in db", async () => {
+    it("Should return FALSE, because it found itself in db", async () => {
       assert.equal(
         await campaign.state.instances.deployed.needsDeploy(),
         false
       );
     });
 
-    it("Should return true, because it's missing in db", async () => {
+    it("Should return TRUE, because it's missing in db", async () => {
       assert.equal(
         await campaign.state.instances.needsDeploy.needsDeploy(),
         true
       );
-    });
-
-    it("Should update state contract when contract found in db", async () => {
-      // assert.equal(
-      //   await campaign.state.instances.deployed.needsDeploy(),
-      //   false
-      // );
     });
   });
 });

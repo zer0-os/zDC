@@ -1,4 +1,11 @@
-import { MongoClient, MongoClientOptions, Db, DbOptions } from "mongodb";
+import {
+  MongoClient,
+  MongoClientOptions,
+  Db,
+  DbOptions,
+  WriteConcern,
+  ReadConcern,
+} from "mongodb";
 
 export const collectionMock = {
   insertOne: async () => Promise.resolve(),
@@ -9,9 +16,7 @@ export const collectionMock = {
       type : string;
     }
   ) => {
-    if (
-      args.name === "Contract_deployed"
-    ) {
+    if (args.name === "Contract_deployed") {
       return {
         name: `${args.name}`,
         address: `0xaddress_${args.name}`,
@@ -39,7 +44,17 @@ export const collectionMock = {
 
 export const dbMock = {
   collection: () => collectionMock,
-};
+  databaseName: "mockDb",
+  options: {},
+  readConcern: new ReadConcern("local"),
+  writeConcern: new WriteConcern(),
+  secondaryOk: true,
+  readPreference: { mode: "primary" },  // Заглушка для readPreference
+  command: async () => Promise.resolve({}),  // Заглушка для command
+  aggregate: () => ({
+    toArray: async () => Promise.resolve([]),
+  }),
+} as unknown as Db;  // Приведение к типу Db
 
 export class MongoClientMock extends MongoClient {
   constructor (dbUri : string, clientOpts : MongoClientOptions) {
