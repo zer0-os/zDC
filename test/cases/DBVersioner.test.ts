@@ -52,17 +52,23 @@ describe("DB versioner", function () {
     // @ts-ignore // because native .collection() requires arguments
     dbMock.collection().findOne = async () => null;
 
-    assert.equal(
-      await versioner.configureVersioning(dbMock),
-      Date.now().toString()
+    // leave +/- 2 seconds for code execution
+    const allowedTimeDifference = 2;
+
+    // do Math.abs, so that the error can be in both directions
+    assert.ok(
+      Math.abs(
+        Number(await versioner.configureVersioning(dbMock)) -
+        Number(Date.now())
+      ) <= allowedTimeDifference,
     );
   });
 
-  it("Should finalize deloyed version", async () => {
+  describe("Common state", () => {
     const tempVersion = "123";
     const deployedVersion = "456";
 
-    const called : Array<{
+    let called : Array<{
       method : string;
       args : any;
     }> = [];
@@ -75,111 +81,156 @@ describe("DB versioner", function () {
       "updateOne",
     ];
 
-    // make special mocks of db methods only for this case
-    // @ts-ignore
-    dbMock.collection().findOne = async (
-      args : {
-        type : string;
-      }
-    ) => {
-      if (args.type === VERSION_TYPES.temp) {
-        return {
-          dbVersion: tempVersion,
-          type: VERSION_TYPES.temp,
-        };
-      }
+    afterEach(() => {
+      called = [];
+    });
 
-      if (args.type === VERSION_TYPES.deployed) {
-        return {
-          dbVersion: deployedVersion,
-          type: VERSION_TYPES.deployed,
-        };
-      }
+    it("Should finalize deloyed version WITHOUT passed `version`", async () => {
+      // make special mocks of db methods
+      // @ts-ignore
+      dbMock.collection().findOne = async (
+        args : {
+          type : string;
+        }
+      ) => {
+        if (args.type === VERSION_TYPES.temp) {
+          return {
+            dbVersion: tempVersion,
+            type: VERSION_TYPES.temp,
+          };
+        }
 
-      return null;
-    };
+        if (args.type === VERSION_TYPES.deployed) {
+          return {
+            dbVersion: deployedVersion,
+            type: VERSION_TYPES.deployed,
+          };
+        }
 
-    // @ts-ignore
-    dbMock.collection().insertOne = async doc => {
-      called.push({
-        method: "insertOne",
-        args: doc,
+        return null;
+      };
+
+      // @ts-ignore
+      dbMock.collection().insertOne = async doc => {
+        called.push({
+          method: "insertOne",
+          args: doc,
+        });
+        return Promise.resolve(doc);
+      };
+
+      // @ts-ignore
+      dbMock.collection().updateOne = async (filter, update) => {
+        called.push({
+          method: "updateOne",
+          args: {
+            filter,
+            update,
+          },
+        });
+        return Promise.resolve({
+          matchedCount: 1,
+          modifiedCount: 1,
+        });
+      };
+
+      // @ts-ignore
+      dbMock.collection().deleteOne = async filter => {
+        called.push({
+          method: "deleteOne",
+          args: filter,
+        });
+        return Promise.resolve();
+      };
+
+      await versioner.finalizeDeployedVersion();
+
+      // looking at the methods called by db, check the order of them and their arguments
+      called.forEach((calledMethod, index) => {
+        const methodName = calledMethod.method;
+        const args = calledMethod.args;
+
+        assert.equal(
+          methodName,
+          expectedOrder[index]
+        );
+
+        if (methodName === "deleteOne") {
+          assert.equal(
+            args.type,
+            VERSION_TYPES.temp
+          );
+          assert.equal(
+            args.dbVersion,
+            tempVersion
+          );
+        }
+
+        if (methodName === "insertOne") {
+          assert.equal(
+            args.type,
+            VERSION_TYPES.deployed
+          );
+          assert.equal(
+            args.dbVersion,
+            tempVersion
+          );
+          assert.equal(
+            args.contractsVersion,
+            contractsVersion
+          );
+        }
+
+        if (methodName === "updateOne") {
+          assert.equal(
+            args.filter.type,
+            index === 0 ? VERSION_TYPES.deployed : VERSION_TYPES.temp
+          );
+          assert.equal(
+            args.update.$set.type,
+            VERSION_TYPES.archived
+          );
+        }
       });
-      return Promise.resolve(doc);
-    };
+    });
 
-    // @ts-ignore
-    dbMock.collection().updateOne = async (filter, update) => {
-      called.push({
-        method: "updateOne",
-        args: {
-          filter,
-          update,
-        },
-      });
-      return Promise.resolve({
-        matchedCount: 1,
-        modifiedCount: 1,
-      });
-    };
+    it("Should finalize deloyed version WITH passed DEPLOYED `version`", async () => {
+      await versioner.finalizeDeployedVersion(deployedVersion);
 
-    // @ts-ignore
-    dbMock.collection().deleteOne = async filter => {
-      called.push({
-        method: "deleteOne",
-        args: filter,
-      });
-      return Promise.resolve();
-    };
-
-    await versioner.finalizeDeployedVersion();
-
-    // looking at the methods called by db, check the order of them and their arguments
-    called.forEach((calledMethod, index) => {
-      const methodName = calledMethod.method;
-      const args = calledMethod.args;
+      const methodName = called[0].method;
+      const args = called[0].args;
 
       assert.equal(
-        methodName,
-        expectedOrder[index]
+        args.filter.type,
+        VERSION_TYPES.temp
       );
+      assert.equal(
+        args.update.$set.type,
+        VERSION_TYPES.archived
+      );
+    });
 
-      if (methodName === "deleteOne") {
-        assert.equal(
-          args.type,
-          VERSION_TYPES.temp
-        );
-        assert.equal(
-          args.dbVersion,
-          tempVersion
-        );
-      }
+    it("Should create update temp version", async () => {
+      await versioner.createUpdateTempVersion(tempVersion);
 
-      if (methodName === "insertOne") {
-        assert.equal(
-          args.type,
-          VERSION_TYPES.deployed
-        );
-        assert.equal(
-          args.dbVersion,
-          tempVersion
-        );
-        assert.equal(
-          args.contractsVersion,
-          contractsVersion
-        );
-      }
+      const args = called[0].args;
 
-      if (methodName === "updateOne") {
-        assert.equal(
-          args.filter.type,
-          index === 0 ? VERSION_TYPES.deployed : VERSION_TYPES.temp
-        );
-        assert.equal(
-          args.update.$set.type,
-          VERSION_TYPES.archived
-        );
-      }
+      assert.equal(
+        called[0].method,
+        "updateOne"
+      );
+      assert.equal(
+        args.filter.type,
+        VERSION_TYPES.temp
+      );
+      assert.equal(
+        args.update.$set.dbVersion,
+        tempVersion
+      );
+      assert.equal(
+        args.update.$set.contractsVersion,
+        contractsVersion
+      );
     });
   });
 });
