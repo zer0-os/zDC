@@ -34,7 +34,6 @@ describe("Base deploy mission", function () {
       env: "prod",
       deployAdmin: {
         address: "0xdeployAdminAddress",
-        getAddress: async () => Promise.resolve("0xdeployAdminAddress"),
       },
       postDeploy: {
         tenderlyProjectSlug: "tenderlyProject",
@@ -126,15 +125,16 @@ describe("Base deploy mission", function () {
   });
 
   describe("Minor methods", () => {
-    it("#deployArgs() Should return correct deploy arguments", async () => {
-      for (const mission of missionIdentifiers) {
-        await campaign.state.instances[mission].deployArgs();
-      }
-    });
-
-    it("#updateStateContract() Should update state contract when deploys the contracts", async () => {
+    it("Should update state of contracts in campaign, when deploys them", async () => {
       const state = await campaign.state.contracts;
 
+      // check here that all objects of contracts got into the state
+      assert.deepEqual(
+        Object.keys(state),
+        missionIdentifiers,
+      );
+
+      // double check that these objects look like the contracts
       for (const mission of missionIdentifiers) {
         const contract = state[mission];
 
@@ -197,17 +197,31 @@ describe("Base deploy mission", function () {
   });
 
   describe("#needsDeploy()",() => {
-    it("Should return FALSE, because it found itself in db", async () => {
+    it("Should return TRUE because the contract is NOT in the DB", async () => {
+      assert.equal(
+        await campaign.state.instances.needsDeploy.needsDeploy(),
+        true
+      );
+    });
+
+    it("Should return FALSE because the contract exists in the DB", async () => {
       assert.equal(
         await campaign.state.instances.deployed.needsDeploy(),
         false
       );
     });
 
-    it("Should return TRUE, because it's missing in db", async () => {
+    it("Should write the contract into the state from the DB " +
+      "when #needsDeploy() returns FALSE", async () => {
+      const contractFromDB = await campaign.dbAdapter.getContract(
+        "Contract_deployed"
+      );
+
+      await campaign.state.instances.deployed.needsDeploy();
+
       assert.equal(
-        await campaign.state.instances.needsDeploy.needsDeploy(),
-        true
+        await campaign.state.contracts.deployed.getAddress(),
+        contractFromDB?.address
       );
     });
   });

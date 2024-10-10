@@ -19,7 +19,7 @@ export const collectionMock = {
     if (args.name === "Contract_deployed") {
       return {
         name: `${args.name}`,
-        address: `0xaddress_${args.name}`,
+        address: `0xcontractAddress_${args.name}`,
         abi: "[]",
         bytecode: "0xbytecode",
         implementation: null,
@@ -49,12 +49,12 @@ export const dbMock = {
   readConcern: new ReadConcern("local"),
   writeConcern: new WriteConcern(),
   secondaryOk: true,
-  readPreference: { mode: "primary" },  // Заглушка для readPreference
-  command: async () => Promise.resolve({}),  // Заглушка для command
+  readPreference: { mode: "primary" },
+  command: async () => Promise.resolve({}),
   aggregate: () => ({
     toArray: async () => Promise.resolve([]),
   }),
-} as unknown as Db;  // Приведение к типу Db
+} as unknown as Db;
 
 export class MongoClientMock extends MongoClient {
   constructor (dbUri : string, clientOpts : MongoClientOptions) {

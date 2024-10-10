@@ -1,17 +1,15 @@
 import assert from "node:assert";
 import {
   DBVersioner,
-  MongoDBAdapter,
   VERSION_TYPES,
 } from "../../src";
 import { loggerMock } from "../mocks/logger";
-import { dbMock, MongoClientMock } from "../mocks/mongo";
+import { dbMock } from "../mocks/mongo";
 
 
 describe("DB versioner", function () {
   this.timeout(5000);
 
-  let mongoAdapter : MongoDBAdapter;
   let versioner : DBVersioner;
 
   const contractsVersion = "1.7.9";
@@ -25,18 +23,6 @@ describe("DB versioner", function () {
       archive: false,
       logger: loggerMock,
     });
-
-    mongoAdapter = new MongoDBAdapter({
-      logger: loggerMock,
-      dbUri: "mongodb://mockedMongo",
-      dbName: "TestDatabase",
-      mongoClientClass: MongoClientMock,
-      versionerClass: DBVersioner,
-      dbVersion,
-      contractsVersion,
-    });
-
-    await mongoAdapter.initialize(dbVersion);
   });
 
   it("Should return existing temp version when calls configureVersioning()", async () => {
@@ -47,7 +33,7 @@ describe("DB versioner", function () {
     );
   });
 
-  it("Should make a DB version (Date.now()) when it's not exist", async () => {
+  it("Should make a DB version (Date.now()) when it does NOT exist", async () => {
     // override the mock method to emulate the absence of a version in the DB
     // @ts-ignore // because native .collection() requires arguments
     dbMock.collection().findOne = async () => null;
@@ -68,6 +54,7 @@ describe("DB versioner", function () {
     const tempVersion = "123";
     const deployedVersion = "456";
 
+    // order of DB methods called by dbVersioner
     let called : Array<{
       method : string;
       args : any;
@@ -143,6 +130,15 @@ describe("DB versioner", function () {
         return Promise.resolve();
       };
 
+      // @ts-ignore
+      dbMock.collection().deleteMany = async filter => {
+        called.push({
+          method: "deleteMany",
+          args: filter,
+        });
+        return Promise.resolve();
+      };
+
       await versioner.finalizeDeployedVersion();
 
       // looking at the methods called by db, check the order of them and their arguments
@@ -201,6 +197,10 @@ describe("DB versioner", function () {
       const args = called[0].args;
 
       assert.equal(
+        methodName,
+        "updateOne"
+      );
+      assert.equal(
         args.filter.type,
         VERSION_TYPES.temp
       );
@@ -230,6 +230,21 @@ describe("DB versioner", function () {
       assert.equal(
         args.update.$set.contractsVersion,
         contractsVersion
+      );
+    });
+
+    it("Should call deleteMany() with passed `version`", async () => {
+      await versioner.clearDBForVersion(tempVersion);
+
+      const args = called[0].args;
+
+      assert.equal(
+        called[0].method,
+        "deleteMany"
+      );
+      assert.equal(
+        args.dbVersion,
+        tempVersion
       );
     });
   });
