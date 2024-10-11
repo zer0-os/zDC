@@ -21,9 +21,24 @@ const contractMock = (name : string) => ({
   interface: {},
 } as unknown as IContractV6);
 
-export const contractFactoryMock = (name : string) => ({
-  deploy: async () => Promise.resolve(contractMock(name)),
-  attach: async () => Promise.resolve(contractMock(name)),
+export const contractFactoryMock = (name : string, called : Array<IExecutedCall>) => ({
+  // @ts-ignore // doesn't see, that TDeployArgs type reflects an array
+  deploy: async (...args ?: TDeployArgs) => {
+    called.push({
+      methodName: "deploy",
+      args,
+    });
+
+    return Promise.resolve(contractMock(name));
+  },
+  attach: async () => {
+    called.push({
+      methodName: "attach",
+      args: [name],
+    });
+
+    return Promise.resolve(contractMock(name));
+  },
   contractName: name,
 } as unknown as IContractFactoryBase);
 
@@ -37,14 +52,23 @@ export class HardhatMock implements IHardhatBase {
   called : Array<IExecutedCall> = [];
 
   ethers = {
-    getContractFactory: async <F extends IContractFactoryBase>
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (contractName : string, signerOrOptions : any) : Promise<F> => (
-      {
-        ...contractFactoryMock(contractName),
+    getContractFactory: async <F extends IContractFactoryBase>(
+      contractName : string,
+      signerOrOptions : any
+    ) : Promise<F> => {
+
+      const factory = {
+        ...contractFactoryMock(contractName, this.called),
         contractName,
-      }
-    ) as unknown as Promise<F>,
+      } as unknown as F;
+
+      this.called.push({
+        methodName: "getContractFactory",
+        args: { contractName, signerOrOptions },
+      });
+
+      return Promise.resolve(factory);
+    },
     provider: {
       getCode: async () => Promise.resolve("0xbytecode"),
     },
@@ -54,11 +78,17 @@ export class HardhatMock implements IHardhatBase {
     deployProxy: async (
       factory : any,
       args : TDeployArgs,
-      options : { kind : TProxyKind; }
+      options : {
+        kind : TProxyKind;
+      }
     ) : Promise<IContractV6> => {
       this.called.push({
         methodName: "deployProxy",
-        args: { contractName: factory.contractName, args, kind: options.kind },
+        args: {
+          contractName: factory.contractName,
+          args,
+          kind: options.kind,
+        },
       });
 
       return contractMock(factory.contractName) as unknown as Promise<IContractV6>;

@@ -13,6 +13,7 @@ import { HardhatMock } from "../mocks/hardhat";
 import { loggerMock } from "../mocks/logger";
 import { testMissions } from "../mocks/missions";
 import { MongoClientMock } from "../mocks/mongo";
+import { assertIsContract } from "../helpers/isContractCheck";
 
 
 // this.timeout() doesn't work for arrow functions.
@@ -43,7 +44,6 @@ describe("Base deploy mission", function () {
     };
 
     const signerMock = {
-      getAddress: async () => Promise.resolve("0xsignerAddress"),
       address: "0xsignerAddress",
     };
 
@@ -137,36 +137,7 @@ describe("Base deploy mission", function () {
       // double check that these objects look like the contracts
       for (const mission of missionIdentifiers) {
         const contract = state[mission];
-
-        assert.strictEqual(
-          typeof contract.deploymentTransaction,
-          "function",
-          "Not a contract. Method 'deploymentTransaction' should exist"
-        );
-
-        assert.strictEqual(
-          typeof contract.getAddress,
-          "function",
-          "Not a contract. Method 'getAddress' should exist"
-        );
-
-        assert.strictEqual(
-          typeof contract.interface,
-          "object",
-          "Not a contract. Property 'interface' should exist"
-        );
-
-        assert.strictEqual(
-          typeof contract.target,
-          "string",
-          "Not a contract. Property 'target' should exist and be an address"
-        );
-
-        assert.strictEqual(
-          typeof contract.waitForDeployment,
-          "function",
-          "Not a contract. Function 'waitForDeployment' should exist"
-        );
+        assertIsContract(contract);
       }
     });
 

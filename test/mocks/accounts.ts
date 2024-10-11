@@ -1,5 +1,4 @@
 export const signerMock = {
-  getAddress: async () => Promise.resolve("0xsignerAddress"),
   address: "0xsignerAddress",
 };
 
