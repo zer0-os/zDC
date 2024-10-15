@@ -7,9 +7,7 @@ import { loggerMock } from "../mocks/logger";
 import { dbMock } from "../mocks/mongo";
 
 
-describe("DB versioner", function () {
-  this.timeout(5000);
-
+describe("DB versioner", () => {
   let versioner : DBVersioner;
 
   const contractsVersion = "1.7.9";
@@ -36,7 +34,9 @@ describe("DB versioner", function () {
   it("Should make a DB version (Date.now()) when it does NOT exist", async () => {
     // override the mock method to emulate the absence of a version in the DB
     // @ts-ignore // because native .collection() requires arguments
-    dbMock.collection().findOne = async () => null;
+    dbMock.collection().findOne = async args => {
+      if (args.type === "TEMP" || "DEPLOYED") return null;
+    };
 
     // leave +/- 2 seconds for code execution
     const allowedTimeDifference = 2;
@@ -249,3 +249,6 @@ describe("DB versioner", function () {
     });
   });
 });
+
+
+// TODO: needs more tests for configureVersioning()

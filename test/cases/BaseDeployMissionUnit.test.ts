@@ -16,9 +16,7 @@ import { MongoClientMock } from "../mocks/mongo";
 import { assertIsContract } from "../helpers/isContractCheck";
 
 
-// this.timeout() doesn't work for arrow functions.
-describe("Base deploy mission", function () {
-  this.timeout(5000);
+describe("Base deploy mission", () => {
 
   let campaign : DeployCampaign<IHardhatBase, ISignerBase, IDeployCampaignConfig<ISignerBase>, IContractState>;
   let hardhatMock : HardhatMock;
