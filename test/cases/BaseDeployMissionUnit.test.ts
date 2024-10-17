@@ -186,7 +186,10 @@ describe("Base deploy mission", () => {
         "Contract_deployed"
       );
 
-      await campaign.state.instances.deployed.needsDeploy();
+      assert.equal(
+        await campaign.state.instances.deployed.needsDeploy(),
+        false
+      );
 
       assert.equal(
         await campaign.state.contracts.deployed.getAddress(),

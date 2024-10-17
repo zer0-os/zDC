@@ -10,6 +10,15 @@ import { dbMock } from "../mocks/mongo";
 describe("DB versioner", () => {
   let versioner : DBVersioner;
 
+  // order of DB methods called by dbVersioner
+  let called : Array<{
+    method : string;
+    args : any;
+  }> = [];
+
+  // Error for Date.now(). Leave +/- 2 seconds for code execution
+  const allowedTimeDifference = 2;
+
   const contractsVersion = "1.7.9";
   const dbVersion = "109381236293746234";
 
@@ -38,9 +47,6 @@ describe("DB versioner", () => {
       if (args.type === "TEMP" || "DEPLOYED") return null;
     };
 
-    // leave +/- 2 seconds for code execution
-    const allowedTimeDifference = 2;
-
     // do Math.abs, so that the error can be in both directions
     assert.ok(
       Math.abs(
@@ -53,12 +59,6 @@ describe("DB versioner", () => {
   describe("Common state", () => {
     const tempVersion = "123";
     const deployedVersion = "456";
-
-    // order of DB methods called by dbVersioner
-    let called : Array<{
-      method : string;
-      args : any;
-    }> = [];
 
     // expected order of DB method calls when calling finalizeDeployedVersion()
     const expectedOrder = [
@@ -210,7 +210,7 @@ describe("DB versioner", () => {
       );
     });
 
-    it("Should create update temp version", async () => {
+    it("createUpdateTempVersion() should call updateOne() method with correct args", async () => {
       await versioner.createUpdateTempVersion(tempVersion);
 
       const args = called[0].args;
@@ -233,7 +233,7 @@ describe("DB versioner", () => {
       );
     });
 
-    it("Should call deleteMany() with passed `version`", async () => {
+    it("clearDBForVersion() should call deleteMany() with passed `version`", async () => {
       await versioner.clearDBForVersion(tempVersion);
 
       const args = called[0].args;
@@ -248,7 +248,113 @@ describe("DB versioner", () => {
       );
     });
   });
+
+  describe("#configureVersioning()", () => {
+    const tempVersion = "123[temp]";
+    const deployedVersion = "456[deployed]";
+
+    it("Should return TEMP version when deployed does NOT exist", async () => {
+      // @ts-ignore
+      dbMock.collection().findOne = async (
+        args : {
+          type : string;
+        }
+      ) => {
+        if (args.type === VERSION_TYPES.temp) {
+          return {
+            dbVersion: tempVersion,
+            type: VERSION_TYPES.temp,
+          };
+        }
+
+        return null;
+      };
+
+      assert.equal(
+        await versioner.configureVersioning(dbMock),
+        tempVersion
+      );
+    });
+
+    it("Should return NEW final TEMP version (Date.now()) when temp version does NOT exist", async () => {
+      // @ts-ignore
+      dbMock.collection().findOne = async (
+        args : {
+          type : string;
+        }
+      ) => {
+        if (args.type === VERSION_TYPES.deployed) {
+          return {
+            dbVersion: deployedVersion,
+            type: VERSION_TYPES.deployed,
+          };
+        }
+
+        called.push({
+          method: "findOne",
+          args,
+        });
+
+        return null;
+      };
+
+      assert.ok(
+        // do Math.abs, so that the error can be in both directions
+        Math.abs(
+          Number(await versioner.configureVersioning(dbMock)) -
+          Number(Date.now())
+        ) <= allowedTimeDifference,
+      );
+    });
+
+    it("Should return existing temp version when both, deployed and temp, exist", async () => {
+      // @ts-ignore
+      dbMock.collection().findOne = async (
+        args : {
+          type : string;
+        }
+      ) => {
+        if (args.type === VERSION_TYPES.temp) {
+          return {
+            dbVersion: tempVersion,
+            type: VERSION_TYPES.temp,
+          };
+        }
+
+        if (args.type === VERSION_TYPES.deployed) {
+          return {
+            dbVersion: deployedVersion,
+            type: VERSION_TYPES.deployed,
+          };
+        }
+
+        return null;
+      };
+
+      assert.equal(
+        await versioner.configureVersioning(dbMock),
+        tempVersion
+      );
+    });
+
+    it("Should make NEW final TEMP version (Date.now())" +
+       "when temp and deployed versions do NOT exist", async () => {
+      // @ts-ignore
+      dbMock.collection().findOne = async (
+        args : {
+          type : string;
+        }
+      ) => (args.type === VERSION_TYPES.temp || args.type === VERSION_TYPES.deployed) ? null : null;
+
+      assert.ok(
+        // do Math.abs, so that the error can be in both directions
+        Math.abs(
+          Number(await versioner.configureVersioning(dbMock)) -
+          Number(Date.now())
+        ) <= allowedTimeDifference,
+      );
+    });
+
+    it("Should (all cases with passed V)", async () => {});
+  });
 });
-
-
-// TODO: needs more tests for configureVersioning()

@@ -10,7 +10,7 @@ import {
 import { loggerMock } from "../mocks/logger";
 
 
-describe.only("Get Adapter", () => {
+describe("Get Adapter", () => {
   let originalInitialize : any;
   let mongoAdapter : MongoDBAdapter;
 
