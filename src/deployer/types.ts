@@ -2,6 +2,18 @@ import { IContractV6 } from "../campaign/types";
 import { TDeployArgs, TProxyKind } from "../missions/types";
 
 
+export type TEnvironment = "dev" | "test" | "prod";
+export type TEnvironmentLevels = {
+  [key in TEnvironment] : string;
+};
+
+export type INetworkData = {
+  [env in TEnvironment] : {
+    name : string;
+    id : string;
+  };
+};
+
 export type THHTaskArguments = unknown;
 
 export interface IHHSubtaskArguments {
@@ -91,4 +103,5 @@ export interface IHardhatDeployerArgs<
   hre : H;
   signer : S;
   env : string;
+  numConfirmations : number;
 }

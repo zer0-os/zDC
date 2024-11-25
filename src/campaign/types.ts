@@ -27,10 +27,14 @@ export interface IAddressable {
   getAddress : () => Promise<string>;
 }
 
+export interface ITransactionResponseBase {
+  wait(confirms ?: number, timeout ?: number) : Promise<ITransactionReceipt | null>;
+}
+
 export interface IContractV6 {
   getAddress : () => Promise<string>;
   waitForDeployment : () => Promise<IContractV6>;
-  deploymentTransaction : () => ITransactionReceipt | null;
+  deploymentTransaction : () => ITransactionResponseBase | null;
   target : string | IAddressable;
   interface : object;
 }
