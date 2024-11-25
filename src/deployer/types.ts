@@ -103,5 +103,5 @@ export interface IHardhatDeployerArgs<
   hre : H;
   signer : S;
   env : string;
-  numConfirmations : number;
+  confirmationsN : number;
 }

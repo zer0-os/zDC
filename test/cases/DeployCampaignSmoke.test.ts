@@ -66,6 +66,7 @@ describe("Deploy Campaign Smoke Test", () => {
       hre: hardhatMock,
       signer: signerMock,
       env: "prod",
+      confirmationsN: 0,
     });
 
     const collectionMock = {

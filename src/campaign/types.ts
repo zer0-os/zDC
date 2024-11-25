@@ -81,6 +81,7 @@ export interface ICampaignArgs <
 export interface IDeployCampaignConfig <Signer> extends IBaseDataMap<Signer> {
   env : string;
   deployAdmin : Signer;
+  confirmations : number;
   postDeploy : {
     tenderlyProjectSlug : string;
     monitorContracts : boolean;

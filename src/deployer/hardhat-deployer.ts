@@ -1,7 +1,8 @@
 import { ITenderlyContractData, TDeployArgs, TProxyKind } from "../missions/types";
 import axios from "axios";
-import { IContractV6 } from "../campaign/types";
+import { IContractV6, ITransactionResponseBase } from "../campaign/types";
 import { IHardhatBase, ISignerBase, IHardhatDeployerArgs } from "./types";
+import { EnvironmentLevels } from "./constants";
 
 
 export class HardhatDeployer <
@@ -11,15 +12,24 @@ export class HardhatDeployer <
   hre : H;
   signer : S;
   env : string;
+  confirmationsN : number;
 
   constructor ({
     hre,
     signer,
     env,
+    confirmationsN,
   } : IHardhatDeployerArgs<H, S>) {
     this.hre = hre;
     this.signer = signer;
     this.env = env;
+    this.confirmationsN = confirmationsN;
+  }
+
+  async awaitConfirmation (tx : ITransactionResponseBase | null) {
+    if (this.env !== EnvironmentLevels.dev) {
+      if (tx) await tx.wait(this.confirmationsN);
+    }
   }
 
   async getFactory (contractName : string, signer ?: S) {
@@ -46,20 +56,28 @@ export class HardhatDeployer <
     // @ts-ignore
     const contractFactory = await this.getFactory(contractName);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const deployment = await this.hre.upgrades!.deployProxy(contractFactory, args, {
+    const contract = await this.hre.upgrades!.deployProxy(contractFactory, args, {
       kind,
     });
 
-    return deployment.waitForDeployment();
+    const deployTx = contract.deploymentTransaction();
+
+    await this.awaitConfirmation(deployTx);
+
+    return contract;
   }
 
   async deployContract (contractName : string, args : TDeployArgs) : Promise<IContractV6> {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const contractFactory = await this.getFactory(contractName);
-    const deployment = await contractFactory.deploy(...args);
+    const contract = await contractFactory.deploy(...args);
 
-    return deployment.waitForDeployment();
+    const deployTx = contract.deploymentTransaction();
+
+    await this.awaitConfirmation(deployTx);
+
+    return contract;
   }
 
   getContractArtifact (contractName : string) {
