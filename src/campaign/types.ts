@@ -6,6 +6,12 @@ import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
 import { IHardhatBase, ISignerBase, TEnvironment } from "../deployer/types";
 
 
+export type TSupportedChain = "zchain" | "ethereum";
+export interface ISupportedChains {
+  z : TSupportedChain;
+  eth : TSupportedChain;
+}
+
 export interface ITransactionReceipt {
   hash : string;
 }
@@ -82,6 +88,7 @@ export interface IDeployCampaignConfig <Signer> extends IBaseDataMap<Signer> {
   env : TEnvironment;
   deployAdmin : Signer;
   confirmationsN : number;
+  srcChainName : TSupportedChain;
   postDeploy : {
     tenderlyProjectSlug : string;
     monitorContracts : boolean;
