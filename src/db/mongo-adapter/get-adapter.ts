@@ -17,7 +17,7 @@ export const getMongoAdapter = async ({
   logger ?: TLogger;
   contractsVersion ?: string;
 } = {}) : Promise<MongoDBAdapter> => {
-  logger = !logger ? getLogger() : logger;
+  logger = logger ?? getLogger();
 
   const params = {
     logger,
