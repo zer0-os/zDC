@@ -3,7 +3,7 @@ import { TDeployMissionCtor } from "../missions/types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IHardhatBase, ISignerBase } from "../deployer/types";
+import { IHardhatBase, ISignerBase, TEnvironment } from "../deployer/types";
 
 
 export interface ITransactionReceipt {
@@ -79,9 +79,9 @@ export interface ICampaignArgs <
 }
 
 export interface IDeployCampaignConfig <Signer> extends IBaseDataMap<Signer> {
-  env : string;
+  env : TEnvironment;
   deployAdmin : Signer;
-  confirmations : number;
+  confirmationsN : number;
   postDeploy : {
     tenderlyProjectSlug : string;
     monitorContracts : boolean;

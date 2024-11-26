@@ -34,7 +34,7 @@ export const createDeployCampaign = async <
       hre,
       signer: config.deployAdmin,
       env: config.env,
-      confirmationsN: config.confirmations,
+      confirmationsN: config.confirmationsN,
     });
   }
 
