@@ -1,7 +1,7 @@
 import { getLogger } from "./logger/create-logger";
 import { HardhatDeployer, IHardhatBase, ISignerBase } from "./deployer";
 import { DeployCampaign, IContractState, IDeployCampaignConfig, TLogger } from "./campaign";
-import { DEFAULT_MONGO_DB_NAME, DEFAULT_MONGO_URI, getMongoAdapter, MongoDBAdapter } from "./db";
+import { getMongoAdapter, MongoDBAdapter } from "./db";
 import { TDeployMissionCtor } from "./missions";
 
 
