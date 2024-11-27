@@ -77,11 +77,9 @@ export class DeployCampaign <
     await this.dbAdapter.configureVersioning();
 
     this.logger.info(
-      `Deploy Campaign execution started.
-      Environment: ${env}
-      Chain: ${srcChainName}
-      DB Name: ${this.dbAdapter.dbName}
-      DB Version: ${this.dbAdapter.versioner.curDbVersion}`
+      "Deploy Campaign execution started. " +
+      // eslint-disable-next-line max-len
+      `ENV: ${env}. CHAIN: ${srcChainName}. DB NAME: ${this.dbAdapter.dbName}. DB V: ${this.dbAdapter.versioner.curDbVersion}.`
     );
 
     await Object.values(this.state.instances).reduce(
