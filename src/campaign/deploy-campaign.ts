@@ -72,7 +72,6 @@ export class DeployCampaign <
     const {
       env,
       srcChainName,
-      crosschain,
     } = this.config;
 
     await this.dbAdapter.configureVersioning();
