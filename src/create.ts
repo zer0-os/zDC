@@ -17,6 +17,11 @@ export const createDeployCampaign = async <
   deployer,
   logger,
   dbAdapter,
+  dbUri,
+  dbName,
+  dbVersion,
+  archiveDb,
+  clientOpts,
   contractsVersion,
 } : {
   hre : H;
@@ -25,6 +30,11 @@ export const createDeployCampaign = async <
   deployer ?: HardhatDeployer<H, S>;
   logger ?: TLogger;
   dbAdapter ?: MongoDBAdapter;
+  dbUri ?: string;
+  dbName ?: string;
+  dbVersion ?: string;
+  archiveDb ?: boolean;
+  clientOpts ?: Record<string, unknown>;
   contractsVersion ?: string;
 }) => {
   if (!logger) logger = getLogger();
@@ -34,12 +44,18 @@ export const createDeployCampaign = async <
       hre,
       signer: config.deployAdmin,
       env: config.env,
+      confirmationsN: config.confirmationsN,
     });
   }
 
   if (!dbAdapter) dbAdapter = await getMongoAdapter({
     logger,
     contractsVersion,
+    dbUri,
+    dbName,
+    dbVersion,
+    archiveDb,
+    clientOpts,
   });
 
   return new DeployCampaign<H, S, C, St>({

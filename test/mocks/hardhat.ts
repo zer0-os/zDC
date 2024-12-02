@@ -16,6 +16,7 @@ const contractMock = {
   waitForDeployment: async () => Promise.resolve(contractMock),
   deploymentTransaction: () => ({
     hash: "0xhash",
+    wait: async () => Promise.resolve({ hash: "0xhash" }),
   }),
   interface: {},
 } as IContractV6;

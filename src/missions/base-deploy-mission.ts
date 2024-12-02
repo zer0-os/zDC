@@ -6,9 +6,15 @@ import {
   ITenderlyContractData,
 } from "./types";
 import { DeployCampaign } from "../campaign/deploy-campaign";
-import { IContractState, IContractV6, IDeployCampaignConfig, TLogger } from "../campaign/types";
+import {
+  IContractState,
+  IContractV6,
+  IDeployCampaignConfig,
+  ITransactionResponseBase,
+  TLogger,
+} from "../campaign/types";
 import { IContractDbData } from "../db/types";
-import { NetworkData } from "../deployer/constants";
+import { EnvironmentLevels, NetworkData } from "../deployer/constants";
 import { IHardhatBase, ISignerBase } from "../deployer/types";
 
 
@@ -128,6 +134,19 @@ export class BaseDeployMission <
 
   async postDeploy () {
     return Promise.resolve();
+  }
+
+  async awaitConfirmation (tx : ITransactionResponseBase | null) {
+    const {
+      config: {
+        env,
+        confirmationsN,
+      },
+    } = this.campaign;
+
+    if (env !== EnvironmentLevels.dev) {
+      if (tx) await tx.wait(confirmationsN);
+    }
   }
 
   async execute () {

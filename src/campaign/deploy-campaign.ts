@@ -17,7 +17,7 @@ export class DeployCampaign <
   H extends IHardhatBase,
   S extends ISignerBase,
   C extends IDeployCampaignConfig<S>,
-  St extends IContractState<IContractV6>,
+  St extends IContractState,
 > {
   state : ICampaignState<H, S, C, St>;
   deployer : HardhatDeployer<H, S>;
@@ -69,9 +69,18 @@ export class DeployCampaign <
   }
 
   async execute () {
-    this.logger.info("Deploy Campaign execution started.");
+    const {
+      env,
+      srcChainName,
+    } = this.config;
 
     await this.dbAdapter.configureVersioning();
+
+    this.logger.info(
+      "Deploy Campaign execution started. " +
+      // eslint-disable-next-line max-len
+      `ENV: ${env}. CHAIN: ${srcChainName}. DB NAME: ${this.dbAdapter.dbName}. DB V: ${this.dbAdapter.versioner.curDbVersion}.`
+    );
 
     await Object.values(this.state.instances).reduce(
       async (

@@ -3,8 +3,14 @@ import { TDeployMissionCtor } from "../missions/types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IHardhatBase, ISignerBase } from "../deployer/types";
+import { IHardhatBase, ISignerBase, TEnvironment } from "../deployer/types";
 
+
+export type TSupportedChain = "zchain" | "ethereum";
+export interface ISupportedChains {
+  z : TSupportedChain;
+  eth : TSupportedChain;
+}
 
 export interface ITransactionReceipt {
   hash : string;
@@ -27,10 +33,14 @@ export interface IAddressable {
   getAddress : () => Promise<string>;
 }
 
+export interface ITransactionResponseBase {
+  wait(confirms ?: number, timeout ?: number) : Promise<ITransactionReceipt | null>;
+}
+
 export interface IContractV6 {
   getAddress : () => Promise<string>;
   waitForDeployment : () => Promise<IContractV6>;
-  deploymentTransaction : () => ITransactionReceipt | null;
+  deploymentTransaction : () => ITransactionResponseBase | null;
   target : string | IAddressable;
   interface : object;
 }
@@ -75,8 +85,10 @@ export interface ICampaignArgs <
 }
 
 export interface IDeployCampaignConfig <Signer> extends IBaseDataMap<Signer> {
-  env : string;
+  env : TEnvironment;
   deployAdmin : Signer;
+  confirmationsN : number;
+  srcChainName : TSupportedChain;
   postDeploy : {
     tenderlyProjectSlug : string;
     monitorContracts : boolean;

@@ -1,10 +1,12 @@
+import { INetworkData, TEnvironmentLevels } from "./types";
+import { IProxyKinds } from "../missions";
 
-export interface INetworkData {
-  [env : string] : {
-    name : string;
-    id : string;
-  };
-}
+
+export const EnvironmentLevels : TEnvironmentLevels = {
+  dev: "dev",
+  test: "test",
+  prod: "prod",
+};
 
 export const NetworkData : INetworkData = {
   test: {
@@ -19,4 +21,10 @@ export const NetworkData : INetworkData = {
     name: "hardhat",
     id: "31337",
   },
+};
+
+export const ProxyKinds : IProxyKinds = {
+  uups: "uups",
+  transparent: "transparent",
+  beacon: "beacon",
 };
