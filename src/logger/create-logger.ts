@@ -19,22 +19,27 @@ export const createLogger = (logLevel ?: string, silent ?: boolean) => winston.c
   silent,
 });
 
-export const getLogger = () : TLogger => {
+export const getLogger = ({
+  logLevel = "debug",
+  silence = true,
+  makeLogFile = false,
+} : {
+  logLevel ?: string;
+  silence ?: boolean;
+  makeLogFile ?: boolean;
+} = {}) : TLogger => {
   if (logger) return logger;
 
-  logger = createLogger(
-    process.env.LOG_LEVEL || "debug",
-    process.env.SILENT_LOGGER === "true"
-  );
+  logger = createLogger(logLevel, silence);
 
-  const logFileName = `deploy-${Date.now()}.log`;
+  if (makeLogFile) {
+    const logFileName = `deploy-${Date.now()}.log`;
 
-  if (process.env.ENV_LEVEL?.includes("prod") || process.env.ENV_LEVEL?.includes("test")) {
     logger.add(
       new winston.transports.File({ filename: logFileName }),
     );
 
-    logger.debug(`The ENV_LEVEL is ${process.env.ENV_LEVEL}, logs will be saved in ${ logFileName } file`);
+    logger.debug(`Logs will be saved in ${ logFileName } file`);
   }
 
   return logger;

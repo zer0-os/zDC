@@ -3,14 +3,22 @@ import { TDeployMissionCtor } from "../missions/types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IProviderBase, TSigner } from "../deployer/types";
+import { IProviderBase, TSigner, TEnvironment } from "../deployer/types";
 import { ContractInterface, BaseContract } from "ethers";
 
 
+export type TSupportedChain = "zchain" | "ethereum";
+export interface ISupportedChains {
+  z : TSupportedChain;
+  eth : TSupportedChain;
+}
+
 export interface IDeployCampaignConfig extends IBaseDataMap {
-  env : string;
+  env : TEnvironment;
   upgrade : boolean;
   deployAdmin : TSigner;
+  confirmationsN : number;
+  srcChainName : TSupportedChain;
   postDeploy : {
     tenderlyProjectSlug : string;
     monitorContracts : boolean;
@@ -39,6 +47,10 @@ export interface IAddressable {
 }
 
 export type TLogger = WinstonLogger | Console;
+
+export interface ITransactionResponseBase {
+  wait(confirms ?: number, timeout ?: number) : Promise<ITransactionReceipt | null>;
+}
 
 export type TGeneralContract = BaseContract & Omit<ContractInterface, keyof BaseContract>;
 

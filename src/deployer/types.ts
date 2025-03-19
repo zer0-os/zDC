@@ -14,6 +14,18 @@ export interface HardhatExtensions {
 
 export type HardhatExtended = HardhatRuntimeEnvironment & HardhatExtensions;
 
+export type TEnvironment = "dev" | "test" | "prod";
+export type TEnvironmentLevels = {
+  [key in TEnvironment] : string;
+};
+
+export type INetworkData = {
+  [env in TEnvironment] : {
+    name : string;
+    id : string;
+  };
+};
+
 export type THHTaskArguments = unknown;
 
 export interface IHHSubtaskArguments {
@@ -71,4 +83,5 @@ export interface IHardhatDeployerArgs {
   hre : HardhatExtended;
   signer : TSigner;
   env : string;
+  confirmationsN : number;
 }

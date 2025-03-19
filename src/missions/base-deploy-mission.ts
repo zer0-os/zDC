@@ -6,9 +6,14 @@ import {
   ITenderlyContractData,
 } from "./types";
 import { DeployCampaign } from "../campaign/deploy-campaign";
-import { IContractState, IDeployCampaignConfig, TLogger } from "../campaign/types";
+import {
+  IContractState,
+  IDeployCampaignConfig,
+  TLogger,
+  ITransactionResponseBase,
+} from "../campaign/types";
 import { IContractDbData } from "../db/types";
-import { NetworkData } from "../deployer/constants";
+import { EnvironmentLevels, NetworkData } from "../deployer/constants";
 import { Contract } from "ethers";
 import { UpgradeOps } from "./constants";
 import { bytecodesMatch } from "../utils/bytecode";
@@ -239,6 +244,19 @@ export class BaseDeployMission <
     if (this.config.upgrade) return this.executeUpgrade();
 
     return this.executeDeploy();
+  }
+
+  async awaitConfirmation (tx : ITransactionResponseBase | null) {
+    const {
+      config: {
+        env,
+        confirmationsN,
+      },
+    } = this.campaign;
+
+    if (env !== EnvironmentLevels.dev) {
+      if (tx) await tx.wait(confirmationsN);
+    }
   }
 
   async verify () {

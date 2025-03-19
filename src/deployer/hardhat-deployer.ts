@@ -3,21 +3,32 @@ import axios from "axios";
 import { IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
 import { Contract, ContractFactory } from "ethers";
 import { UpgradeProxyOptions } from "@openzeppelin/hardhat-upgrades/dist/utils";
+import { IContractV6, ITransactionResponseBase } from "../campaign/types";
+import { EnvironmentLevels } from "./constants";
 
 
 export class HardhatDeployer {
   hre : HardhatExtended;
   signer : TSigner;
   env : string;
+  confirmationsN : number;
 
   constructor ({
     hre,
     signer,
     env,
+    confirmationsN,
   } : IHardhatDeployerArgs) {
     this.hre = hre;
     this.signer = signer;
     this.env = env;
+    this.confirmationsN = confirmationsN;
+  }
+
+  async awaitConfirmation (tx : ITransactionResponseBase | null) {
+    if (this.env !== EnvironmentLevels.dev) {
+      if (tx) await tx.wait(this.confirmationsN);
+    }
   }
 
   async getFactory (contractName : string, signer ?: TSigner) {
@@ -41,16 +52,24 @@ export class HardhatDeployer {
     opts : UpgradeProxyOptions;
   }) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
-    const deployment = await this.hre.upgrades.deployProxy(contractFactory, args, opts);
+    const contract = await this.hre.upgrades.deployProxy(contractFactory, args, opts);
 
-    return deployment.waitForDeployment();
+    const deployTx = contract.deploymentTransaction();
+
+    await this.awaitConfirmation(deployTx);
+
+    return contract;
   }
 
   async deployContract (contractName : string, args : TDeployArgs) : Promise<Contract> {
     const contractFactory = await this.getFactory(contractName);
-    const deployment = await contractFactory.deploy(...args);
+    const contract = await contractFactory.deploy(...args);
 
-    return deployment.waitForDeployment();
+    const deployTx = contract.deploymentTransaction();
+
+    await this.awaitConfirmation(deployTx);
+
+    return contract;
   }
 
   async upgradeProxy (

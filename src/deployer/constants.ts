@@ -1,12 +1,13 @@
 import { IRedeployImplementationOpts } from "./types";
+import { INetworkData, TEnvironmentLevels } from "./types";
 import { IProxyKinds } from "../missions";
 
-export interface INetworkData {
-  [env : string] : {
-    name : string;
-    id : string;
-  };
-}
+
+export const EnvironmentLevels : TEnvironmentLevels = {
+  dev: "dev",
+  test: "test",
+  prod: "prod",
+};
 
 export const NetworkData : INetworkData = {
   test: {
