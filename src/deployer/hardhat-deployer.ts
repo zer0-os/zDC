@@ -3,7 +3,7 @@ import axios from "axios";
 import { IHardhatDeployerArgs, TSigner, HardhatExtended } from "./types";
 import { Contract, ContractFactory } from "ethers";
 import { UpgradeProxyOptions } from "@openzeppelin/hardhat-upgrades/dist/utils";
-import { IContractV6, ITransactionResponseBase } from "../campaign/types";
+import { ITransactionResponseBase } from "../campaign/types";
 import { EnvironmentLevels } from "./constants";
 
 

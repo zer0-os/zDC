@@ -3,7 +3,7 @@ import { TDeployMissionCtor } from "../missions/types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IProviderBase, TSigner, TEnvironment } from "../deployer/types";
+import { TSigner, TEnvironment } from "../deployer/types";
 import { ContractInterface, BaseContract } from "ethers";
 
 
