@@ -2,12 +2,13 @@
 import {
   IContractArtifact,
   IContractFactoryBase,
-  IContractV6,
-  IHardhatBase, IHHSubtaskArguments,
+  IDeployOpts,
+  IHHSubtaskArguments, IUpgradeOpts,
   TDeployArgs,
   THHTaskArguments,
   TProxyKind,
 } from "../../src";
+import { Contract } from "ethers";
 
 
 const contractMock = {
@@ -19,7 +20,7 @@ const contractMock = {
     wait: async () => Promise.resolve({ hash: "0xhash" }),
   }),
   interface: {},
-} as IContractV6;
+} as Contract;
 
 export const contractFactoryMock = {
   deploy: async () => Promise.resolve(contractMock),
@@ -33,7 +34,7 @@ export interface IExecutedCall {
   args ?: any;
 }
 
-export class HardhatMock implements IHardhatBase {
+export class HardhatMock {
   called : Array<IExecutedCall> = [];
 
   ethers = {
@@ -54,15 +55,21 @@ export class HardhatMock implements IHardhatBase {
     deployProxy: async (
       factory : any,
       args : TDeployArgs,
-      options : { kind : TProxyKind; }
-    ) : Promise<IContractV6> => {
+      options : IDeployOpts,
+    ) : Promise<Contract> => {
       this.called.push({
         methodName: "deployProxy",
         args: { contractName: factory.contractName, args, kind: options.kind },
       });
 
-      return contractMock as unknown as Promise<IContractV6>;
+      return contractMock as unknown as Promise<Contract>;
     },
+    upgradeProxy: async <F extends IContractFactoryBase> (
+      proxy : string | Contract,
+      Contract : F,
+      opts : IUpgradeOpts,
+      // TODO: implement properly for tests
+    ) : Promise<Contract> => Promise.resolve(contractMock),
     erc1967: {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       getImplementationAddress: async (address : string) => Promise.resolve("0ximplementationAddress"),

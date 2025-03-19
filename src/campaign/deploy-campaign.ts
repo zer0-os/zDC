@@ -3,24 +3,22 @@ import {
   ICampaignState,
   TLogger,
   IMissionInstances,
-  IContractV6, IDeployCampaignConfig, IContractState,
+  IDeployCampaignConfig, IContractState,
 } from "./types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { ITenderlyContractData, TDeployMissionCtor } from "../missions/types";
 import { BaseDeployMission } from "../missions/base-deploy-mission";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IHardhatBase, ISignerBase } from "../deployer/types";
 import { makeCampaignProxy } from "./proxy";
+import { Contract } from "ethers";
 
 
 export class DeployCampaign <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  C extends IDeployCampaignConfig<S>,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
-  state : ICampaignState<H, S, C, St>;
-  deployer : HardhatDeployer<H, S>;
+  state : ICampaignState<C, St>;
+  deployer : HardhatDeployer;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
   config : C;
@@ -35,7 +33,7 @@ export class DeployCampaign <
     dbAdapter,
     logger,
     config,
-  } : ICampaignArgs<H, S, C, St>) {
+  } : ICampaignArgs<C, St>) {
     this.state = {
       missions,
       instances: {},
@@ -50,7 +48,7 @@ export class DeployCampaign <
 
     // instantiate all missions
     this.state.instances = missions.reduce(
-      (acc : IMissionInstances<H, S, C, St>, mission : TDeployMissionCtor<H, S, C, St>) => {
+      (acc : IMissionInstances<C, St>, mission : TDeployMissionCtor<C, St>) => {
         const instance = new mission({
           campaign: campaignProxy,
           logger,
@@ -85,7 +83,7 @@ export class DeployCampaign <
     await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<H, S, C, St>,
+        missionInstance : BaseDeployMission<C, St>,
       ) : Promise<void> => {
         await acc;
         return missionInstance.execute();
@@ -105,7 +103,7 @@ export class DeployCampaign <
     this.logger.info(`Deploy Campaign execution finished successfully under DB Version: ${this.dbAdapter.versioner.curDbVersion}.`);
   }
 
-  updateStateContract (instanceName : string, contractName : string, contract : IContractV6) {
+  updateStateContract (instanceName : string, contractName : string, contract : Contract) {
     // TODO: can we improve this?
     (this.state.contracts as IContractState)[instanceName] = contract;
     this.logger.debug(`Data of deployed contract '${contractName}' is added to Campaign state at '${instanceName}'.`);
@@ -115,7 +113,7 @@ export class DeployCampaign <
     return Object.values(this.state.instances).reduce(
       async (
         acc : Promise<void>,
-        missionInstance : BaseDeployMission<H, S, C, St>,
+        missionInstance : BaseDeployMission<C, St>,
       ) => {
         await acc;
         return missionInstance.verify();
@@ -130,7 +128,7 @@ export class DeployCampaign <
     const contracts = await Object.values(this.state.instances).reduce(
       async (
         acc : Promise<Array<ITenderlyContractData>>,
-        missionInstance : BaseDeployMission<H, S, C, St>,
+        missionInstance : BaseDeployMission<C, St>,
       ) : Promise<Array<ITenderlyContractData>> => {
         const newAcc = await acc;
         const data = await missionInstance.getMonitoringData();

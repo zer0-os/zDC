@@ -8,26 +8,26 @@ import {
 import { DeployCampaign } from "../campaign/deploy-campaign";
 import {
   IContractState,
-  IContractV6,
   IDeployCampaignConfig,
-  ITransactionResponseBase,
   TLogger,
+  ITransactionResponseBase,
 } from "../campaign/types";
 import { IContractDbData } from "../db/types";
 import { EnvironmentLevels, NetworkData } from "../deployer/constants";
-import { IHardhatBase, ISignerBase } from "../deployer/types";
+import { Contract } from "ethers";
+import { UpgradeOps } from "./constants";
+import { bytecodesMatch } from "../utils/bytecode";
+import { IDBVersion } from "../db";
 
 
 export class BaseDeployMission <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  C extends IDeployCampaignConfig<S>,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
   contractName! : string;
   instanceName! : string;
   proxyData! : IProxyData;
-  campaign : DeployCampaign<H, S, C, St>;
+  campaign : DeployCampaign<C, St>;
   logger : TLogger;
   config : C;
   implAddress! : string | null;
@@ -36,7 +36,7 @@ export class BaseDeployMission <
     campaign,
     logger,
     config,
-  } : IDeployMissionArgs<H, S, C, St>) {
+  } : IDeployMissionArgs<C, St>) {
     this.campaign = campaign;
     this.logger = logger;
     this.config = config;
@@ -46,11 +46,23 @@ export class BaseDeployMission <
     return this.contractName;
   }
 
-  async getFromDB () {
-    return this.campaign.dbAdapter.getContract(this.dbName);
+  async getDeployedFromDB () {
+    // ! Only one "DEPLOYED" version should exist in the DB at any time !
+    const deployedVersionDoc = await this.campaign.dbAdapter.versioner.getDeployedVersion();
+    if (!deployedVersionDoc) {
+      // TODO upg: will this be logged by a logger or should we add logger call as well? test!
+      // eslint-disable-next-line max-len
+      throw new Error("No deployed version found in DB. This method should be run in upgrade mode only, and the 'DEPLOYED' DB version should exist already from the previous deploy.");
+    }
+
+    return this.campaign.dbAdapter.getContract(this.dbName, deployedVersionDoc.dbVersion);
   }
 
-  async saveToDB (contract : IContractV6) {
+  async getLatestFromDB () {
+    return this.campaign.dbAdapter.getContract(this.contractName);
+  }
+
+  async saveToDB (contract : Contract) {
     this.logger.debug(`Writing ${this.dbName} to DB...`);
 
     this.implAddress = this.proxyData.isProxy
@@ -62,8 +74,19 @@ export class BaseDeployMission <
     return this.campaign.dbAdapter.writeContract(this.dbName, contractDbDoc);
   }
 
+  async dbCopy () {
+    const deployedContract = await this.getDeployedFromDB();
+    delete deployedContract?.version;
+    // @ts-ignore
+    delete deployedContract?._id;
+    // TODO upg: fix this write method on db adapter to write contract with a proper version!
+    const { dbVersion: tempV } = await this.campaign.dbAdapter.versioner.getTempVersion() as IDBVersion;
+    await this.campaign.dbAdapter.writeContract(this.contractName, (deployedContract as IContractDbData), tempV);
+    this.logger.debug(`${this.contractName} data is copied to the newest version of the DB...`);
+  }
+
   async needsDeploy () {
-    const dbContract = await this.getFromDB();
+    const dbContract = await this.getLatestFromDB();
 
     if (!dbContract) {
       this.logger.info(`${this.dbName} not found in DB, proceeding to deploy...`);
@@ -93,7 +116,7 @@ export class BaseDeployMission <
   }
 
   async buildDbObject (
-    hhContract : IContractV6,
+    hhContract : Contract,
     implAddress : string | null
   ) : Promise<Omit<IContractDbData, "version">> {
     const { abi, bytecode } = this.getArtifact();
@@ -110,12 +133,12 @@ export class BaseDeployMission <
     const deployArgs = await this.deployArgs();
     this.logger.info(`Deploying ${this.contractName} with arguments: ${deployArgs}`);
 
-    let contract : IContractV6;
+    let contract : Contract;
     if (this.proxyData.isProxy) {
       contract = await this.campaign.deployer.deployProxy({
         contractName: this.contractName,
         args: deployArgs,
-        kind: this.proxyData.kind,
+        opts: { kind: this.proxyData.kind },
       });
     } else {
       contract = await this.campaign.deployer.deployContract(this.contractName, deployArgs);
@@ -136,6 +159,93 @@ export class BaseDeployMission <
     return Promise.resolve();
   }
 
+  async getContractOperation () {
+    const newContract = await this.getLatestFromDB();
+    const deployedContract = await this.getDeployedFromDB();
+
+    // checking this first to know if this contract has been deployed previously
+    // if not - we just deploy the new one
+    if (!deployedContract) {
+      return UpgradeOps.deploy;
+    }
+
+    // if deployedContract is in DB, but newContract is not in DB yet
+    // we need to compare them
+    if (!newContract) {
+      if (!this.proxyData.isProxy) return UpgradeOps.copy;
+
+      // compare bytecodes against the DB
+      const { bytecode: bytecodeInDB } = deployedContract;
+      const bytecodeFromChain = await this.campaign.deployer.getBytecodeFromChain(deployedContract.address);
+      const { bytecode: curBytecode } = this.getArtifact();
+      const match = bytecodesMatch(bytecodeInDB, curBytecode);
+      const match2 = bytecodesMatch(bytecodeFromChain, curBytecode);
+      const match3 = bytecodesMatch(bytecodeFromChain, bytecodeInDB);
+
+      // TODO upg: MAKE SURE THIS WORKS PROPERLY IN THE UPGRADES PACKAGE
+      //  AND THE CONTRACT IS NOT DEPLOYED IN THE UPGRADE FLOW IF BYTECODES ARE THE SAME !!!
+      //  IF IT DOESN'T, WE NEED OUR OWN WAY TO COMPARE BYTECODES
+      if (!match) return UpgradeOps.upgrade;
+
+      return UpgradeOps.copy;
+
+      // TODO upg: possibly add a check for the RedeployImplementationOpt set for each mission
+      //  as a prop akin to `proxyData`
+      //  some contracts never need to be redeployed, some may always need redeploy and most are `onchange`
+      //  this can be set by default in this mission and overriden by child missions
+    }
+
+    // if both of them exist and their addresses are the same (proxies),
+    // we don't do anything
+    if (newContract.address === deployedContract.address) {
+      return UpgradeOps.keep;
+    } else {
+      throw new Error("Unknown state of deployment.");
+    }
+  }
+
+  async executeUpgrade () {
+    const op = await this.getContractOperation();
+
+    switch (op) {
+    case UpgradeOps.deploy:
+      await this.executeDeploy();
+      break;
+    case UpgradeOps.copy:
+      await this.dbCopy();
+      break;
+    case UpgradeOps.upgrade:
+      throw new Error(
+        // eslint-disable-next-line max-len
+        `Contract ${this.contractName} source code differs, but it does not use BaseUpgradeMission, so it can not be upgraded.
+        This is an error and needs to be addressed!`
+      );
+    case UpgradeOps.keep:
+      // TODO upg: do we need any logic here ?
+      break;
+    default:
+      throw new Error(`Deploy operation ${op} is not supported.`);
+    }
+  }
+
+  async executeDeploy () {
+    if (await this.needsDeploy()) {
+      await this.deploy();
+    } else {
+      this.logger.info(`Skipping ${this.contractName} deployment...`);
+    }
+
+    if (await this.needsPostDeploy()) {
+      await this.postDeploy();
+    }
+  }
+
+  async execute () {
+    if (this.config.upgrade) return this.executeUpgrade();
+
+    return this.executeDeploy();
+  }
+
   async awaitConfirmation (tx : ITransactionResponseBase | null) {
     const {
       config: {
@@ -146,18 +256,6 @@ export class BaseDeployMission <
 
     if (env !== EnvironmentLevels.dev) {
       if (tx) await tx.wait(confirmationsN);
-    }
-  }
-
-  async execute () {
-    if (await this.needsDeploy()) {
-      await this.deploy();
-    } else {
-      this.logger.info(`Skipping ${this.contractName} deployment...`);
-    }
-
-    if (await this.needsPostDeploy()) {
-      await this.postDeploy();
     }
   }
 

@@ -40,7 +40,7 @@ export const getMongoAdapter = async ({
     contractsVersion,
   };
 
-  if (!mongoAdapter) {
+  if (mongoAdapter === null) {
     logger.debug("Creating new MongoDBAdapter instance");
     mongoAdapter = new MongoDBAdapter({
       ...params,
