@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment, max-classes-per-file */
 import {
   BaseDeployMission,
-  IContractState, IDeployCampaignConfig, IDeployMissionArgs,
-  IHardhatBase,
-  ISignerBase,
+  IContractState,
+  IDeployCampaignConfig,
+  IDeployMissionArgs,
   ProxyKinds,
   TDeployArgs,
 } from "../../src";
@@ -21,18 +21,14 @@ export const makeTestMissionProxy = (mission : any) => new Proxy(mission, {
 });
 
 export abstract class ATestDeployMission<
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  C extends IDeployCampaignConfig<S>,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
-> extends BaseDeployMission<H, S, C, St> {
+> extends BaseDeployMission<C, St> {
   called : Array<IExecutedCall | string> = [];
 }
 
 export const makeMissionMock = <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  C extends IDeployCampaignConfig<S>,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > ({
   _contractName,
@@ -48,7 +44,7 @@ export const makeMissionMock = <
   _deployArgs : TDeployArgs;
   _needsPostDeploy : boolean;
   _postDeployCb : () => Promise<void>;
-}) => class TestMission extends ATestDeployMission<H, S, C, St> {
+}) => class TestMission extends ATestDeployMission<C, St> {
   called : Array<IExecutedCall> = [];
 
   proxyData = {
@@ -59,7 +55,7 @@ export const makeMissionMock = <
   contractName = _contractName;
   instanceName = _instanceName;
 
-  constructor (args : IDeployMissionArgs<H, S, C, St>) {
+  constructor (args : IDeployMissionArgs<C, St>) {
     super(args);
 
     return makeTestMissionProxy(this);

@@ -1,3 +1,4 @@
+import { IRedeployImplementationOpts } from "./types";
 import { INetworkData, TEnvironmentLevels } from "./types";
 import { IProxyKinds } from "../missions";
 
@@ -21,6 +22,12 @@ export const NetworkData : INetworkData = {
     name: "hardhat",
     id: "31337",
   },
+};
+
+export const RedeployImplementationOpts : IRedeployImplementationOpts = {
+  always: "always",
+  never: "never",
+  onchange: "onchange",
 };
 
 export const ProxyKinds : IProxyKinds = {

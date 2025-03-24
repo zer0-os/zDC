@@ -3,13 +3,27 @@ import { TDeployMissionCtor } from "../missions/types";
 import { HardhatDeployer } from "../deployer/hardhat-deployer";
 import { Logger as WinstonLogger } from "winston";
 import { MongoDBAdapter } from "../db/mongo-adapter/mongo-adapter";
-import { IHardhatBase, ISignerBase, TEnvironment } from "../deployer/types";
+import { TSigner, TEnvironment } from "../deployer/types";
+import { ContractInterface, BaseContract } from "ethers";
 
 
 export type TSupportedChain = "zchain" | "ethereum";
 export interface ISupportedChains {
   z : TSupportedChain;
   eth : TSupportedChain;
+}
+
+export interface IDeployCampaignConfig extends IBaseDataMap {
+  env : TEnvironment;
+  upgrade : boolean;
+  deployAdmin : TSigner;
+  confirmationsN : number;
+  srcChainName : TSupportedChain;
+  postDeploy : {
+    tenderlyProjectSlug : string;
+    monitorContracts : boolean;
+    verifyContracts : boolean;
+  };
 }
 
 export interface ITransactionReceipt {
@@ -24,74 +38,49 @@ export type TCampaignDataType = bigint
   | boolean
   | object;
 
-export interface IBaseDataMap<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key : string] : TCampaignDataType | T | IBaseDataMap<T> | undefined;
+export interface IBaseDataMap {
+  [key : string] : TCampaignDataType | TSigner | undefined;
 }
 
 export interface IAddressable {
   getAddress : () => Promise<string>;
 }
 
+export type TLogger = WinstonLogger | Console;
+
 export interface ITransactionResponseBase {
   wait(confirms ?: number, timeout ?: number) : Promise<ITransactionReceipt | null>;
 }
 
-export interface IContractV6 {
-  getAddress : () => Promise<string>;
-  waitForDeployment : () => Promise<IContractV6>;
-  deploymentTransaction : () => ITransactionResponseBase | null;
-  target : string | IAddressable;
-  interface : object;
-}
+export type TGeneralContract = BaseContract & Omit<ContractInterface, keyof BaseContract>;
 
-export type TLogger = WinstonLogger | Console;
-
-export interface IContractState<C extends IContractV6 = IContractV6> {
-  [key : string] : C;
+export interface IContractState {
+  [name : string] : BaseContract;
 }
 
 export interface IMissionInstances <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  C extends IDeployCampaignConfig<S>,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
-  [key : string] : BaseDeployMission<H, S, C, St>;
+  [key : string] : BaseDeployMission<C, St>;
 }
 
 export interface ICampaignState <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  C extends IDeployCampaignConfig<S>,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
-  missions : Array<TDeployMissionCtor<H, S, C, St>>;
-  instances : IMissionInstances<H, S, C, St>;
+  missions : Array<TDeployMissionCtor<C, St>>;
+  instances : IMissionInstances<C, St>;
   contracts : St;
 }
 
 export interface ICampaignArgs <
-  H extends IHardhatBase,
-  S extends ISignerBase,
-  C extends IDeployCampaignConfig<S>,
+  C extends IDeployCampaignConfig,
   St extends IContractState,
 > {
-  missions : Array<TDeployMissionCtor<H, S, C, St>>;
-  deployer : HardhatDeployer<H, S>;
+  missions : Array<TDeployMissionCtor<C, St>>;
+  deployer : HardhatDeployer;
   dbAdapter : MongoDBAdapter;
   logger : TLogger;
   config : C;
-}
-
-export interface IDeployCampaignConfig <Signer> extends IBaseDataMap<Signer> {
-  env : TEnvironment;
-  deployAdmin : Signer;
-  confirmationsN : number;
-  srcChainName : TSupportedChain;
-  postDeploy : {
-    tenderlyProjectSlug : string;
-    monitorContracts : boolean;
-    verifyContracts : boolean;
-  };
 }
